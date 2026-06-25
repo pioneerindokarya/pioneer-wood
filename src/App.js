@@ -351,8 +351,42 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
     </Modal>
   );
 }
-function RawmatExportModal({ records, month, t, onClose, lang }) {
-  const [copied, setCopied] = useState(false);
+// ─── PRINT UTILITY ─────────────────────────────────────────────────────────
+const PRINT_CSS = `
+  @page { size: landscape; margin: 12mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 10px; color: #1E1E1E; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .header { margin-bottom: 12px; border-bottom: 2px solid #1C3A2A; padding-bottom: 8px; }
+  .header h1 { font-size: 15px; font-weight: 800; color: #1C3A2A; }
+  .header p { font-size: 10px; color: #6B6355; margin-top: 2px; }
+  .summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .sbox { border-left: 3px solid #1C3A2A; padding: 6px 10px; background: #F5F2EC; flex: 1; min-width: 90px; }
+  .sbox .sl { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #6B6355; margin-bottom: 2px; }
+  .sbox .sv { font-size: 13px; font-weight: 800; color: #1C3A2A; }
+  .sbox .ss { font-size: 8px; color: #6B6355; margin-top: 1px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  th { padding: 5px 6px; font-size: 8px; font-weight: 700; text-transform: uppercase; background: #F5F2EC; border-bottom: 1.5px solid #DDD5C8; text-align: left; white-space: nowrap; }
+  td { padding: 5px 6px; font-size: 9px; border-bottom: 1px solid #F0EAE0; vertical-align: top; }
+  tr { page-break-inside: avoid; }
+  .sub { font-size: 8px; color: #6B6355; margin-top: 1px; }
+  .bold { font-weight: 700; }
+  .green { color: #276130; font-weight: 700; }
+  .red { color: #B93C22; font-weight: 700; }
+  .amber { color: #C97E1A; font-weight: 700; }
+  .blue { color: #1A5276; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 8px; font-weight: 700; }
+  .ba { background: #FEF6E7; color: #C97E1A; }
+  .bb { background: #EAF2FB; color: #1A5276; }
+  .bg { background: #EAF4EC; color: #276130; }
+`;
+
+function printHTML(title, bodyHTML) {
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>${PRINT_CSS}</style></head><body>${bodyHTML}<script>window.onload=function(){window.print();}</script></body></html>`);
+  w.document.close();
+}
+
+function RawmatExportModal({ records, month, t, onClose }) {
   const monthLabel = month === "all" ? t.common.allMonths : month;
   const logs = records.filter(r => r.type === "LOG"), rsts = records.filter(r => r.type === "RST");
   const totalSJLog = logs.reduce((a, r) => a + (r.sjVol || 0), 0);
@@ -362,16 +396,46 @@ function RawmatExportModal({ records, month, t, onClose, lang }) {
   const avgRendemen = rendemenLogs.length > 0 ? (rendemenLogs.reduce((a, r) => a + r.rendemen, 0) / rendemenLogs.length).toFixed(2) : null;
   const totalSJRST = rsts.reduce((a, r) => a + (r.sjVol || 0), 0);
   const totalFinalRST = rsts.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
-  const textReport = `${t.rawmat.export.title.toUpperCase()}\nPioneer Wood · ${monthLabel}\n${"─".repeat(40)}\nLOG (${logs.length} ${t.rawmat.summary.kiriman})\n  SJ    : ${f2(totalSJLog, 4)} m³\n  Final : ${f2(totalFinalLog, 4)} m³\n  Gesek : ${f2(totalGesek, 4)} m³\n  ${t.rawmat.export.avgRendemen}: ${avgRendemen ? avgRendemen + "%" : "—"}\n\nRST (${rsts.length} ${t.rawmat.summary.kiriman})\n  SJ    : ${f2(totalSJRST, 4)} m³\n  Final : ${f2(totalFinalRST, 4)} m³\n${"─".repeat(40)}\n${records.map(r => { const ef = getEffectiveFinal(r); return `[${r.type}] ${r.date} · ${r.supplier}${r.nomorKiriman ? " · No." + r.nomorKiriman : ""}\n  SJ: ${f2(r.sjVol, 4)} m³  |  Final: ${ef != null ? f2(ef, 4) : "—"} m³${r.type === "LOG" && r.gesekVol != null ? `  |  Gesek: ${f2(r.gesekVol, 4)} m³${r.gesekDate ? " (" + r.gesekDate + ")" : ""}  |  Rendemen: ${r.rendemen != null ? r.rendemen.toFixed(2) + "%" : "—"}` : ""}`; }).join("\n")}`;
-  const handleCopy = () => { navigator.clipboard.writeText(textReport).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); };
+
+  const handlePrint = () => {
+    const title = `${t.rawmat.export.title} - ${monthLabel}`;
+    const rows = records.map(r => {
+      const ef = getEffectiveFinal(r);
+      const status = getRawmatStatus(r);
+      return `<tr>
+        <td>${r.date}</td>
+        <td>${r.nomorKiriman || "—"}</td>
+        <td class="bold">${r.supplier}</td>
+        <td><span class="badge ${r.type === "LOG" ? "ba" : "bb"}">${r.type}</span></td>
+        <td>${f2(r.sjVol, 4)}</td>
+        <td>${r.type === "LOG" ? (r.tallyLogVol != null ? f2(r.tallyLogVol, 4) : "—") : (r.tallyVol != null ? f2(r.tallyVol, 4) : "—")}</td>
+        <td class="bold">${ef != null ? f2(ef, 4) : "—"}</td>
+        <td>${r.type === "LOG" && r.gesekVol != null ? `${f2(r.gesekVol, 4)}${r.gesekDate ? `<div class="sub">${r.gesekDate}</div>` : ""}` : "—"}</td>
+        <td>${r.type === "LOG" && r.rendemen != null ? `<span class="${r.rendemen >= 60 ? "green" : r.rendemen >= 50 ? "amber" : "red"}">${r.rendemen.toFixed(2)}%</span>` : "—"}</td>
+        <td><span class="badge ${status === "gesek" || status === "final" ? "bg" : status === "tally" ? "bb" : "ba"}">${t.rawmat.status[status]}</span></td>
+      </tr>`;
+    }).join("");
+
+    const html = `
+      <div class="header"><h1>${t.rawmat.export.title}</h1><p>Pioneer Wood · ${monthLabel} · ${new Date().toLocaleDateString()}</p></div>
+      <div class="summary">
+        <div class="sbox" style="border-color:#C97E1A"><div class="sl">LOG · ${logs.length} kiriman</div><div class="sv">${f2(totalSJLog, 4)} m³ <span style="font-size:10px;font-weight:400">SJ</span></div><div class="ss">Final: ${f2(totalFinalLog, 4)} m³ · Gesek: ${f2(totalGesek, 4)} m³${avgRendemen ? ` · Rendemen: ${avgRendemen}%` : ""}</div></div>
+        <div class="sbox" style="border-color:#1A5276"><div class="sl">RST · ${rsts.length} kiriman</div><div class="sv">${f2(totalSJRST, 4)} m³ <span style="font-size:10px;font-weight:400">SJ</span></div><div class="ss">Final: ${f2(totalFinalRST, 4)} m³</div></div>
+      </div>
+      <table>
+        <thead><tr><th>Tanggal</th><th>No. Kiriman</th><th>Supplier</th><th>Jenis</th><th>SJ (m³)</th><th>Tally (m³)</th><th>Final (m³)</th><th>Gesek (m³)</th><th>Rendemen %</th><th>Status</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    printHTML(title, html);
+  };
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 680, maxHeight: "92vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
         <div style={{ padding: "18px 24px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#fff", zIndex: 1 }}>
           <div><div style={{ fontSize: 17, fontWeight: 800, color: C.primary }}>{t.rawmat.export.title}</div><div style={{ fontSize: 13, color: C.textSub }}>Pioneer Wood · {monthLabel}</div></div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={handleCopy} style={S.btn(copied ? C.green : C.primary)}>{copied ? t.rawmat.export.copied : t.rawmat.export.copy}</button>
-            <button onClick={() => window.print()} style={S.btn("#555")}>{t.rawmat.export.print}</button>
+            <button onClick={handlePrint} style={S.btn(C.green)}>⬇ PDF</button>
             <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: C.textSub }}>×</button>
           </div>
         </div>
@@ -397,13 +461,9 @@ function RawmatExportModal({ records, month, t, onClose, lang }) {
           </div>
           <div style={{ overflow: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-              <thead><tr style={{ background: C.bg }}>{[t.common.date, t.rawmat.table.nomorKiriman, t.rawmat.table.supplier, t.rawmat.table.type, t.rawmat.table.sj, t.rawmat.table.final, t.rawmat.table.gesek, t.rawmat.table.rendemen].map((h, i) => <th key={i} style={{ ...S.th, fontSize: 10 }}>{h}</th>)}</tr></thead>
-              <tbody>{records.map(r => { const ef = getEffectiveFinal(r); return (<tr key={r.id}><td style={{ ...S.td, fontSize: 12 }}>{r.date}</td><td style={{ ...S.td, fontSize: 12 }}>{r.nomorKiriman || "—"}</td><td style={{ ...S.td, fontSize: 12, fontWeight: 600 }}>{r.supplier}</td><td style={{ ...S.td, fontSize: 12 }}><span style={S.badge(r.type === "LOG" ? "amber" : "blue")}>{r.type}</span></td><td style={{ ...S.td, fontSize: 12 }}>{f2(r.sjVol, 4)}</td><td style={{ ...S.td, fontSize: 12, fontWeight: 700 }}>{ef != null ? f2(ef, 4) : "—"}</td><td style={{ ...S.td, fontSize: 12 }}>{r.type === "LOG" && r.gesekVol != null ? <div>{f2(r.gesekVol, 4)}{r.gesekDate && <div style={{ fontSize: 10, color: C.textLight }}>{r.gesekDate}</div>}</div> : "—"}</td><td style={{ ...S.td, fontSize: 12 }}>{r.type === "LOG" && r.rendemen != null ? <span style={{ fontWeight: 700, color: r.rendemen >= 60 ? C.green : r.rendemen >= 50 ? C.amber : C.red }}>{r.rendemen.toFixed(2)}%</span> : "—"}</td></tr>); })}</tbody>
+              <thead><tr style={{ background: C.bg }}>{[t.common.date, t.rawmat.table.nomorKiriman, t.rawmat.table.supplier, t.rawmat.table.type, t.rawmat.table.sj, t.rawmat.table.tally, t.rawmat.table.final, t.rawmat.table.gesek, t.rawmat.table.rendemen, t.rawmat.table.status].map((h, i) => <th key={i} style={{ ...S.th, fontSize: 10 }}>{h}</th>)}</tr></thead>
+              <tbody>{records.map(r => { const ef = getEffectiveFinal(r); const status = getRawmatStatus(r); const tally = getTally(r); return (<tr key={r.id}><td style={{ ...S.td, fontSize: 12 }}>{r.date}</td><td style={{ ...S.td, fontSize: 12 }}>{r.nomorKiriman || "—"}</td><td style={{ ...S.td, fontSize: 12, fontWeight: 600 }}>{r.supplier}</td><td style={{ ...S.td, fontSize: 12 }}><span style={S.badge(r.type === "LOG" ? "amber" : "blue")}>{r.type}</span></td><td style={{ ...S.td, fontSize: 12 }}>{f2(r.sjVol, 4)}</td><td style={{ ...S.td, fontSize: 12 }}>{tally != null ? f2(tally, 4) : "—"}</td><td style={{ ...S.td, fontSize: 12, fontWeight: 700 }}>{ef != null ? f2(ef, 4) : "—"}</td><td style={{ ...S.td, fontSize: 12 }}>{r.type === "LOG" && r.gesekVol != null ? <div>{f2(r.gesekVol, 4)}{r.gesekDate && <div style={{ fontSize: 10, color: C.textLight }}>{r.gesekDate}</div>}</div> : "—"}</td><td style={{ ...S.td, fontSize: 12 }}>{r.type === "LOG" && r.rendemen != null ? <span style={{ fontWeight: 700, color: r.rendemen >= 60 ? C.green : r.rendemen >= 50 ? C.amber : C.red }}>{r.rendemen.toFixed(2)}%</span> : "—"}</td><td style={{ ...S.td, fontSize: 12 }}><span style={S.badge(status === "gesek" || status === "final" ? "green" : status === "tally" ? "blue" : "amber")}>{t.rawmat.status[status]}</span></td></tr>); })}</tbody>
             </table>
-          </div>
-          <div style={{ marginTop: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, marginBottom: 6, textTransform: "uppercase" }}>Plain Text (WhatsApp / WeChat)</div>
-            <pre style={{ background: C.bg, borderRadius: 8, padding: 14, fontSize: 12, color: C.text, overflow: "auto", whiteSpace: "pre-wrap", fontFamily: "monospace", border: `1px solid ${C.border}` }}>{textReport}</pre>
           </div>
         </div>
       </div>
@@ -587,9 +647,8 @@ function ProductionForm({ initial, onClose, onSave, t, saving }) {
   );
 }
 function ProdExportModal({ records, month, t, onClose }) {
-  const [copied, setCopied] = useState(false);
   const monthLabel = month === "all" ? t.common.allMonths : month;
-  const totalInput = records.reduce((a, r) => a + (+r.inputRST || 0), 0);
+  const totalInput = records.reduce((a, r) => a + ((+r.inputRSTLine1 || 0) + (+r.inputRSTLine2 || 0)), 0);
   const totalOutput = records.reduce((a, r) => a + (+r.outputBlok || 0), 0);
   const totalBlok = records.reduce((a, r) => a + (+r.jumlahBlok || 0), 0);
   const totalGlue = records.reduce((a, r) => a + (+r.glueKg || 0), 0);
@@ -600,16 +659,54 @@ function ProdExportModal({ records, month, t, onClose }) {
   const avgM3 = withM3.length ? (withM3.reduce((a, r) => a + +r.m3PerJam, 0) / withM3.length).toFixed(3) : null;
   const withGlue = records.filter(r => r.gluePerM3 != null);
   const avgGlue = withGlue.length ? (withGlue.reduce((a, r) => a + +r.gluePerM3, 0) / withGlue.length).toFixed(3) : null;
-  const textReport = `${t.production.export.title.toUpperCase()}\nPioneer Wood · ${monthLabel}\n${"─".repeat(40)}\n  Total Input RST : ${f2(totalInput)} m³\n  Total Output    : ${f2(totalOutput)} m³ (${totalBlok} blok)\n  Total Jam Kerja : ${f2(totalJam, 1)} jam\n  Total Glue      : ${f2(totalGlue)} kg\n  Avg Yield       : ${avgYield ? avgYield + "%" : "—"}\n  Avg m³/Jam      : ${avgM3 || "—"}\n  Avg Glue/m³     : ${avgGlue || "—"}\n${"─".repeat(40)}\n${records.map(r => `[S${r.shift}] ${r.date} | ${r.jamKerja}jam\n  RST: ${f2(r.inputRST)} m³ | Planer: ${f2(r.outputPlaner)} m³ | Pit: ${f2(r.outputPit)} m³ | Blok: ${f2(r.outputBlok)} m³ (${r.jumlahBlok || "—"})\n  Yield: ${r.overallYield ? r.overallYield + "%" : "—"} | m³/Jam: ${r.m3PerJam || "—"} | Glue/m³: ${r.gluePerM3 || "—"}`).join("\n")}`;
-  const handleCopy = () => { navigator.clipboard.writeText(textReport).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); };
+  const withPlaner = records.filter(r => r.planerYield != null);
+  const avgPlaner = withPlaner.length ? (withPlaner.reduce((a, r) => a + +r.planerYield, 0) / withPlaner.length).toFixed(2) : null;
+
+  const handlePrint = () => {
+    const title = `${t.production.export.title} - ${monthLabel}`;
+    const rows = records.map(r => {
+      const rst1 = +r.inputRSTLine1 || 0, rst2 = +r.inputRSTLine2 || 0;
+      const pl1 = +r.outputPlanerLine1 || 0, pl2 = +r.outputPlanerLine2 || 0;
+      return `<tr>
+        <td>${r.date}</td>
+        <td><span class="badge bb">S${r.shift}</span><div class="sub">${r.jamKerja} jam</div></td>
+        <td class="bold">${f2(rst1 + rst2)}<div class="sub">L1: ${f2(rst1)} · L2: ${f2(rst2)}</div></td>
+        <td>${f2(pl1 + pl2)}<div class="sub">L1: ${f2(pl1)} · L2: ${f2(pl2)}</div></td>
+        <td>${r.outputPit ? f2(r.outputPit) : "—"}</td>
+        <td class="bold">${f2(r.outputBlok)} m³<div class="sub">${r.jumlahBlok || "—"} blok</div></td>
+        <td>${f2(r.rejectedM3)}</td>
+        <td>${f2(r.glueKg)}</td>
+        <td class="${r.overallYield ? (+r.overallYield >= 40 ? "green" : "red") : ""}">${r.overallYield ? r.overallYield + "%" : "—"}</td>
+        <td class="blue">${r.planerYield ? r.planerYield + "%" : "—"}</td>
+        <td class="${r.rejectRate ? (+r.rejectRate > 10 ? "red" : "amber") : ""}">${r.rejectRate ? r.rejectRate + "%" : "—"}</td>
+        <td>${r.m3PerJam || "—"}</td>
+        <td>${r.gluePerM3 || "—"}</td>
+      </tr>`;
+    }).join("");
+    const html = `
+      <div class="header"><h1>${t.production.export.title}</h1><p>Pioneer Wood · ${monthLabel} · ${new Date().toLocaleDateString()}</p></div>
+      <div class="summary">
+        <div class="sbox"><div class="sl">Total Input RST</div><div class="sv">${f2(totalInput)} m³</div></div>
+        <div class="sbox" style="border-color:#276130"><div class="sl">Total Output Blok</div><div class="sv">${f2(totalOutput)} m³</div><div class="ss">${totalBlok} blok</div></div>
+        <div class="sbox" style="border-color:${avgYield && +avgYield >= 40 ? "#276130" : "#B93C22"}"><div class="sl">Avg Yield</div><div class="sv">${avgYield ? avgYield + "%" : "—"}</div><div class="ss">Planer: ${avgPlaner ? avgPlaner + "%" : "—"}</div></div>
+        <div class="sbox" style="border-color:#C97E1A"><div class="sl">Avg m³/Jam</div><div class="sv">${avgM3 || "—"}</div></div>
+        <div class="sbox" style="border-color:#5B2D8E"><div class="sl">Avg Glue/m³</div><div class="sv">${avgGlue ? avgGlue + " kg" : "—"}</div></div>
+        <div class="sbox" style="border-color:#6B6355"><div class="sl">Hari Produksi</div><div class="sv">${records.length}</div><div class="ss">${f2(totalJam, 1)} jam · ${f2(totalGlue)} kg glue</div></div>
+      </div>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Shift</th><th>Input RST (m³)</th><th>Output Planer (m³)</th><th>Output Pit (m³)</th><th>Output Blok</th><th>Rejected (m³)</th><th>Glue (kg)</th><th>Yield %</th><th>Planer %</th><th>Reject %</th><th>m³/Jam</th><th>Glue/m³</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    printHTML(title, html);
+  };
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 680, maxHeight: "92vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
         <div style={{ padding: "18px 24px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#fff", zIndex: 1 }}>
           <div><div style={{ fontSize: 17, fontWeight: 800, color: C.primary }}>{t.production.export.title}</div><div style={{ fontSize: 13, color: C.textSub }}>Pioneer Wood · {monthLabel}</div></div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={handleCopy} style={S.btn(copied ? C.green : C.primary)}>{copied ? t.production.export.copied : t.production.export.copy}</button>
-            <button onClick={() => window.print()} style={S.btn("#555")}>{t.production.export.print}</button>
+            <button onClick={handlePrint} style={S.btn(C.green)}>⬇ PDF</button>
             <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: C.textSub }}>×</button>
           </div>
         </div>
@@ -617,23 +714,42 @@ function ProdExportModal({ records, month, t, onClose }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, marginBottom: 24 }}>
             {[
               { label: "Total Input RST", val: `${f2(totalInput)} m³`, accent: C.blue },
-              { label: "Total Output Blok", val: `${f2(totalOutput)} m³`, accent: C.green },
-              { label: "Total Blok", val: `${totalBlok}`, accent: C.primary },
-              { label: "Total Jam Kerja", val: `${f2(totalJam, 1)} jam`, accent: C.textSub },
-              { label: "Avg Yield", val: avgYield ? `${avgYield}%` : "—", accent: avgYield && +avgYield >= 40 ? C.green : C.red },
+              { label: "Total Output Blok", val: `${f2(totalOutput)} m³`, sub: `${totalBlok} blok`, accent: C.green },
+              { label: "Avg Yield", val: avgYield ? `${avgYield}%` : "—", sub: avgPlaner ? `Planer: ${avgPlaner}%` : null, accent: avgYield && +avgYield >= 40 ? C.green : C.red },
               { label: "Avg m³/Jam", val: avgM3 || "—", accent: C.amber },
               { label: "Avg Glue/m³", val: avgGlue ? `${avgGlue} kg` : "—", accent: C.purple },
-            ].map((c, i) => <div key={i} style={S.statCard(c.accent)}><div style={S.label}>{c.label}</div><div style={{ fontSize: 18, fontWeight: 800, color: C.primary }}>{c.val}</div></div>)}
+              { label: "Hari Produksi", val: `${records.length}`, sub: `${f2(totalJam, 1)} jam · ${f2(totalGlue)} kg`, accent: C.textSub },
+            ].map((c, i) => (
+              <div key={i} style={S.statCard(c.accent)}>
+                <div style={S.label}>{c.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: C.primary }}>{c.val}</div>
+                {c.sub && <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>{c.sub}</div>}
+              </div>
+            ))}
           </div>
           <div style={{ overflow: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-              <thead><tr style={{ background: C.bg }}>{["Tanggal", "Shift", "RST (m³)", "Planer (m³)", "Pit (m³)", "Blok (m³ / qty)", "Rejected (m³)", "Yield %", "Planer %", "m³/Jam", "Glue/m³"].map((h, i) => <th key={i} style={{ ...S.th, fontSize: 10 }}>{h}</th>)}</tr></thead>
-              <tbody>{records.map(r => <tr key={r.id}><td style={{ ...S.td, fontSize: 12 }}>{r.date}</td><td style={{ ...S.td, fontSize: 12 }}><span style={S.badge("blue")}>S{r.shift}</span><div style={{ fontSize: 10, color: C.textSub, marginTop: 2 }}>{r.jamKerja}jam</div></td><td style={{ ...S.td, fontSize: 12 }}>{f2(r.inputRST)}</td><td style={{ ...S.td, fontSize: 12 }}>{f2(r.outputPlaner)}</td><td style={{ ...S.td, fontSize: 12 }}>{r.outputPit ? f2(r.outputPit) : "—"}</td><td style={{ ...S.td, fontSize: 12, fontWeight: 700 }}><div>{f2(r.outputBlok)} m³</div>{r.jumlahBlok && <div style={{ fontSize: 10, color: C.textSub }}>{r.jumlahBlok} blok</div>}</td><td style={{ ...S.td, fontSize: 12 }}>{f2(r.rejectedM3)}</td><td style={{ ...S.td, fontSize: 12, fontWeight: 700, color: r.overallYield ? (+r.overallYield >= 40 ? C.green : C.red) : C.textLight }}>{r.overallYield ? `${r.overallYield}%` : "—"}</td><td style={{ ...S.td, fontSize: 12 }}>{r.planerYield ? `${r.planerYield}%` : "—"}</td><td style={{ ...S.td, fontSize: 12 }}>{r.m3PerJam || "—"}</td><td style={{ ...S.td, fontSize: 12 }}>{r.gluePerM3 || "—"}</td></tr>)}</tbody>
+              <thead><tr style={{ background: C.bg }}>{["Tanggal", "Shift", "Input RST (m³)", "Output Planer (m³)", "Output Pit (m³)", "Output Blok", "Rejected (m³)", "Glue (kg)", "Yield %", "Planer %", "Reject %", "m³/Jam", "Glue/m³"].map((h, i) => <th key={i} style={{ ...S.th, fontSize: 10 }}>{h}</th>)}</tr></thead>
+              <tbody>{records.map(r => {
+                const rst1 = +r.inputRSTLine1 || 0, rst2 = +r.inputRSTLine2 || 0;
+                const pl1 = +r.outputPlanerLine1 || 0, pl2 = +r.outputPlanerLine2 || 0;
+                return (<tr key={r.id}>
+                  <td style={{ ...S.td, fontSize: 12 }}>{r.date}</td>
+                  <td style={{ ...S.td, fontSize: 12 }}><span style={S.badge("blue")}>S{r.shift}</span><div style={{ fontSize: 10, color: C.textSub, marginTop: 2 }}>{r.jamKerja} jam</div></td>
+                  <td style={{ ...S.td, fontSize: 12 }}><div style={{ fontWeight: 700 }}>{f2(rst1 + rst2)}</div><div style={{ fontSize: 10, color: C.textSub }}>L1: {f2(rst1)} · L2: {f2(rst2)}</div></td>
+                  <td style={{ ...S.td, fontSize: 12 }}><div style={{ fontWeight: 700 }}>{f2(pl1 + pl2)}</div><div style={{ fontSize: 10, color: C.textSub }}>L1: {f2(pl1)} · L2: {f2(pl2)}</div></td>
+                  <td style={{ ...S.td, fontSize: 12 }}>{r.outputPit ? f2(r.outputPit) : "—"}</td>
+                  <td style={{ ...S.td, fontSize: 12, fontWeight: 700 }}><div>{f2(r.outputBlok)} m³</div><div style={{ fontSize: 10, color: C.textSub }}>{r.jumlahBlok || "—"} blok</div></td>
+                  <td style={{ ...S.td, fontSize: 12 }}>{f2(r.rejectedM3)}</td>
+                  <td style={{ ...S.td, fontSize: 12 }}>{f2(r.glueKg)}</td>
+                  <td style={{ ...S.td, fontSize: 12, fontWeight: 700, color: r.overallYield ? (+r.overallYield >= 40 ? C.green : C.red) : C.textLight }}>{r.overallYield ? `${r.overallYield}%` : "—"}</td>
+                  <td style={{ ...S.td, fontSize: 12, color: C.blue }}>{r.planerYield ? `${r.planerYield}%` : "—"}</td>
+                  <td style={{ ...S.td, fontSize: 12, color: r.rejectRate ? (+r.rejectRate > 10 ? C.red : C.amber) : C.textLight }}>{r.rejectRate ? `${r.rejectRate}%` : "—"}</td>
+                  <td style={{ ...S.td, fontSize: 12 }}>{r.m3PerJam || "—"}</td>
+                  <td style={{ ...S.td, fontSize: 12 }}>{r.gluePerM3 || "—"}</td>
+                </tr>);
+              })}</tbody>
             </table>
-          </div>
-          <div style={{ marginTop: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, marginBottom: 6, textTransform: "uppercase" }}>Plain Text (WhatsApp / WeChat)</div>
-            <pre style={{ background: C.bg, borderRadius: 8, padding: 14, fontSize: 12, color: C.text, overflow: "auto", whiteSpace: "pre-wrap", fontFamily: "monospace", border: `1px solid ${C.border}` }}>{textReport}</pre>
           </div>
         </div>
       </div>
