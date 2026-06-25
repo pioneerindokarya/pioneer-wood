@@ -422,6 +422,7 @@ function RawmatExportModal({ records, month, t, onClose }) {
         <div class="sbox" style="border-color:#C97E1A"><div class="sl">LOG · ${logs.length} kiriman</div><div class="sv">${f2(totalSJLog, 4)} m³ <span style="font-size:10px;font-weight:400">SJ</span></div><div class="ss">Final: ${f2(totalFinalLog, 4)} m³ · Gesek: ${f2(totalGesek, 4)} m³${avgRendemen ? ` · Rendemen: ${avgRendemen}%` : ""}</div></div>
         <div class="sbox" style="border-color:#1A5276"><div class="sl">RST · ${rsts.length} kiriman</div><div class="sv">${f2(totalSJRST, 4)} m³ <span style="font-size:10px;font-weight:400">SJ</span></div><div class="ss">Final: ${f2(totalFinalRST, 4)} m³</div></div>
       </div>
+      <h2 style="font-size:12px;font-weight:800;color:#1C3A2A;margin:16px 0 8px;text-transform:uppercase;letter-spacing:0.05em;">Detail Kiriman</h2>
       <table>
         <thead><tr><th>Tanggal</th><th>No. Kiriman</th><th>Supplier</th><th>Jenis</th><th>SJ (m³)</th><th>Tally (m³)</th><th>Final (m³)</th><th>Gesek (m³)</th><th>Rendemen %</th><th>Status</th></tr></thead>
         <tbody>${rows}</tbody>
@@ -497,14 +498,28 @@ function RawmatModule({ t, lang }) {
   const onDelete = async (id) => { if (!window.confirm("Hapus data ini?")) return; const { error } = await supabase.from("deliveries").delete().eq("id", id); if (error) { alert("Error: " + error.message); return; } await fetchRecords(); };
 
   const monthRecords = selectedMonth === "all" ? records : records.filter(r => r.date && r.date.startsWith(selectedMonth));
-  const logs = monthRecords.filter(r => r.type === "LOG"), rsts = monthRecords.filter(r => r.type === "RST");
-  const totalSJLog = logs.reduce((a, r) => a + (r.sjVol || 0), 0);
-  const totalSJRST = rsts.reduce((a, r) => a + (r.sjVol || 0), 0);
-  const totalFinalLog = logs.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
-  const totalFinalRST = rsts.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
-  const totalGesek = logs.reduce((a, r) => a + (r.gesekVol || 0), 0);
+
+  // First 4 boxes — always all suppliers
+  const allLogs = monthRecords.filter(r => r.type === "LOG");
+  const allRsts = monthRecords.filter(r => r.type === "RST");
+  const totalSJLog = allLogs.reduce((a, r) => a + (r.sjVol || 0), 0);
+  const totalSJRST = allRsts.reduce((a, r) => a + (r.sjVol || 0), 0);
+  const totalFinalLog = allLogs.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
+  const totalFinalRST = allRsts.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
+  const totalGesek = allLogs.reduce((a, r) => a + (r.gesekVol || 0), 0);
   const pendingTally = monthRecords.filter(r => getRawmatStatus(r) === "sj").length;
   const pendingFinal = monthRecords.filter(r => getRawmatStatus(r) === "tally").length;
+
+  // Supplier-specific boxes when supplier selected
+  const supLogs = selectedSupplier === "all" ? [] : monthRecords.filter(r => r.type === "LOG" && r.supplier === selectedSupplier);
+  const supRsts = selectedSupplier === "all" ? [] : monthRecords.filter(r => r.type === "RST" && r.supplier === selectedSupplier);
+  const supLogFinal = supLogs.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
+  const supGesek = supLogs.reduce((a, r) => a + (r.gesekVol || 0), 0);
+  const supRendemenLogs = supLogs.filter(r => r.rendemen != null);
+  const supAvgRendemen = supRendemenLogs.length > 0 ? (supRendemenLogs.reduce((a, r) => a + r.rendemen, 0) / supRendemenLogs.length).toFixed(2) : null;
+  const supRstSJ = supRsts.reduce((a, r) => a + (r.sjVol || 0), 0);
+  const supRstFinal = supRsts.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
+
   const suppliers = [...new Set(monthRecords.map(r => r.supplier).filter(Boolean))].sort();
   const filtered = [...monthRecords].filter(r => filter === "all" || r.type === filter).filter(r => selectedSupplier === "all" || r.supplier === selectedSupplier).sort((a, b) => { const an = parseInt(a.nomorKiriman), bn = parseInt(b.nomorKiriman); if (isNaN(an) && isNaN(bn)) return 0; if (isNaN(an)) return 1; if (isNaN(bn)) return -1; return an - bn; });
   const statusBadgeColor = (r) => { const s = getRawmatStatus(r); return s === "gesek" || s === "final" ? "green" : s === "tally" ? "blue" : "amber"; };
@@ -515,12 +530,23 @@ function RawmatModule({ t, lang }) {
       <MonthBar selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} onExport={() => setShowExport(true)} t={t} lang={lang} resetFn={() => setSelectedSupplier("all")} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 24 }}>
         {[
-          { label: t.rawmat.summary.logSJ, val: f2(totalSJLog, 4), unit: "m³", sub: `${logs.length} ${t.rawmat.summary.kiriman}`, accent: C.amber },
+          { label: t.rawmat.summary.logSJ, val: f2(totalSJLog, 4), unit: "m³", sub: `${allLogs.length} ${t.rawmat.summary.kiriman}`, accent: C.amber },
           { label: t.rawmat.summary.logFinal, val: f2(totalFinalLog, 4), unit: "m³", sub: `${t.rawmat.summary.gesek}: ${f2(totalGesek, 4)} m³`, accent: C.green },
-          { label: t.rawmat.summary.rstSJ, val: f2(totalSJRST, 4), unit: "m³", sub: `${rsts.length} ${t.rawmat.summary.kiriman}`, accent: C.blue },
-          { label: t.rawmat.summary.rstFinal, val: f2(totalFinalRST, 4), unit: "m³", sub: "", accent: C.green },
-          { label: `⏳ ${t.rawmat.summary.pendingTally}`, val: pendingTally, unit: t.rawmat.summary.kiriman, accent: C.amber },
-          { label: `⏳ ${t.rawmat.summary.pendingFinal}`, val: pendingFinal, unit: t.rawmat.summary.kiriman, accent: C.red },
+          { label: t.rawmat.summary.rstSJ, val: f2(totalSJRST, 4), unit: "m³", sub: `${allRsts.length} ${t.rawmat.summary.kiriman}`, accent: C.blue },
+          { label: t.rawmat.summary.rstFinal, val: f2(totalFinalRST, 4), unit: "m³", accent: C.green },
+          ...(selectedSupplier === "all" ? [
+            { label: `⏳ ${t.rawmat.summary.pendingTally}`, val: pendingTally, unit: t.rawmat.summary.kiriman, accent: C.amber },
+            { label: `⏳ ${t.rawmat.summary.pendingFinal}`, val: pendingFinal, unit: t.rawmat.summary.kiriman, accent: C.red },
+          ] : [
+            ...(supRsts.length > 0 ? [
+              { label: `${selectedSupplier} · RST SJ`, val: f2(supRstSJ, 4), unit: "m³", accent: C.blue },
+              { label: `${selectedSupplier} · RST Final`, val: f2(supRstFinal, 4), unit: "m³", accent: C.green },
+            ] : []),
+            ...(supLogs.length > 0 ? [
+              { label: `${selectedSupplier} · LOG Final`, val: f2(supLogFinal, 4), unit: "m³", accent: C.amber },
+              { label: `${selectedSupplier} · Gesek`, val: f2(supGesek, 4), unit: "m³", sub: supAvgRendemen ? `Rendemen: ${supAvgRendemen}%` : null, accent: C.green },
+            ] : []),
+          ]),
         ].map((c, i) => (
           <div key={i} style={S.statCard(c.accent)}>
             <div style={S.label}>{c.label}</div>
@@ -529,6 +555,7 @@ function RawmatModule({ t, lang }) {
           </div>
         ))}
       </div>
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {["all", "LOG", "RST"].map(f => <button key={f} onClick={() => setFilter(f)} style={{ background: filter === f ? C.primary : C.card, color: filter === f ? "#fff" : C.textSub, border: `1.5px solid ${filter === f ? C.primary : C.border}`, borderRadius: 8, padding: "7px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{f === "all" ? t.common.all : f}</button>)}
@@ -570,7 +597,7 @@ function RawmatModule({ t, lang }) {
       )}
       {showAdd && <AddRawmatModal t={t} filterType={filter} onClose={() => setShowAdd(false)} onSave={onAdd} saving={saving} />}
       {editing && <UpdateRawmatModal record={editing} t={t} onClose={() => setEditing(null)} onSave={onUpdate} saving={saving} />}
-      {showExport && <RawmatExportModal records={filtered} month={selectedMonth} t={t} onClose={() => setShowExport(false)} lang={lang} />}
+      {showExport && <RawmatExportModal records={filtered} month={selectedMonth} t={t} onClose={() => setShowExport(false)} />}
     </div>
   );
 }
