@@ -35,6 +35,7 @@ const T = {
     summary: { logSJ: "LOG · SJ", logFinal: "LOG · Final", rstSJ: "RST · SJ", rstFinal: "RST · Final", pendingTally: "Pending Tally", pendingFinal: "Pending Final", kiriman: "kiriman", gesek: "Gesek" },
     modalTitle: { add: "Tambah Kiriman Baru", updateLog: "Update Data LOG", updateRST: "Update Data RST" },
     month: { all: "Semua Bulan", label: "Bulan", exportBtn: "Export Laporan", exportTitle: "Laporan Penerimaan Bahan Baku", print: "Print", copy: "Salin", copied: "Tersalin!", close: "Tutup", supplier: "Supplier", detail: "Detail Kiriman", avgRendemen: "Rata-rata Rendemen" },
+    filter: { allSuppliers: "Semua Supplier" },
   },
   cn: {
     appName: "原材料入库记录",
@@ -57,6 +58,7 @@ const T = {
     summary: { logSJ: "原木·送货单", logFinal: "原木·最终", rstSJ: "RST·送货单", rstFinal: "RST·最终", pendingTally: "待盘点", pendingFinal: "待确认", kiriman: "笔", gesek: "锯切" },
     modalTitle: { add: "添加新入库", updateLog: "更新原木数据", updateRST: "更新RST数据" },
     month: { all: "全部月份", label: "月份", exportBtn: "导出报告", exportTitle: "原材料入库报告", print: "打印", copy: "复制", copied: "已复制!", close: "关闭", supplier: "供应商", detail: "入库明细", avgRendemen: "平均出材率" },
+    filter: { allSuppliers: "全部供应商" },
   },
 };
 
@@ -252,6 +254,7 @@ function UpdateModal({ record, onClose, onSave, t, saving }) {
   const handleSave = () => {
     onSave({
       ...record,
+      date: record.date,
       tallyLogVol: toNum(form.tallyLogVol), tallyFinalVol: toNum(form.tallyFinalVol),
       gesekVol: toNum(form.gesekVol), gesekDate: form.gesekDate || null,
       tallyVol: toNum(form.tallyVol), finalVol: toNum(form.finalVol),
@@ -434,6 +437,7 @@ export default function App() {
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [selectedSupplier, setSelectedSupplier] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState(currentMonth());
   const [showExport, setShowExport] = useState(false);
   const t = T[lang];
@@ -487,7 +491,22 @@ export default function App() {
   const totalGesek = logs.reduce((a, r) => a + (r.gesekVol || 0), 0);
   const pendingTally = monthRecords.filter(r => getStatus(r) === "sj").length;
   const pendingFinal = monthRecords.filter(r => getStatus(r) === "tally").length;
-  const filtered = filter === "all" ? monthRecords : monthRecords.filter(r => r.type === filter);
+
+  const suppliers = [...new Set(monthRecords.map(r => r.supplier).filter(Boolean))].sort();
+
+  const filtered = [...monthRecords]
+    .filter(r => filter === "all" || r.type === filter)
+    .filter(r => selectedSupplier === "all" || r.supplier === selectedSupplier)
+    .sort((a, b) => {
+      const aNum = parseInt(a.nomorKiriman);
+      const bNum = parseInt(b.nomorKiriman);
+      const aValid = !isNaN(aNum);
+      const bValid = !isNaN(bNum);
+      if (!aValid && !bValid) return 0;
+      if (!aValid) return 1;
+      if (!bValid) return -1;
+      return aNum - bNum;
+    });
 
   const statusBadgeColor = (r) => {
     const s = getStatus(r);
@@ -511,9 +530,9 @@ export default function App() {
 
         {/* Month selector */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-          <input type="month" style={{ ...S.input, width: "auto", fontWeight: 700, fontSize: 14, color: C.primary }} value={selectedMonth === "all" ? "" : selectedMonth} onChange={e => setSelectedMonth(e.target.value || "all")} />
-          <button onClick={() => setSelectedMonth("all")} style={{ background: selectedMonth === "all" ? C.primary : C.card, color: selectedMonth === "all" ? "#fff" : C.textSub, border: `1.5px solid ${selectedMonth === "all" ? C.primary : C.border}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t.month.all}</button>
-          <button onClick={() => setSelectedMonth(currentMonth())} style={{ background: "none", border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: C.textSub }}>{lang === "id" ? "Bulan Ini" : "本月"}</button>
+          <input type="month" style={{ ...S.input, width: "auto", fontWeight: 700, fontSize: 14, color: C.primary }} value={selectedMonth === "all" ? "" : selectedMonth} onChange={e => { setSelectedMonth(e.target.value || "all"); setSelectedSupplier("all"); }} />
+          <button onClick={() => { setSelectedMonth("all"); setSelectedSupplier("all"); }} style={{ background: selectedMonth === "all" ? C.primary : C.card, color: selectedMonth === "all" ? "#fff" : C.textSub, border: `1.5px solid ${selectedMonth === "all" ? C.primary : C.border}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t.month.all}</button>
+          <button onClick={() => { setSelectedMonth(currentMonth()); setSelectedSupplier("all"); }} style={{ background: "none", border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: C.textSub }}>{lang === "id" ? "Bulan Ini" : "本月"}</button>
           <div style={{ marginLeft: "auto" }}>
             <button style={S.btn(C.green)} onClick={() => setShowExport(true)}>{t.month.exportBtn}</button>
           </div>
@@ -542,12 +561,20 @@ export default function App() {
 
         {/* Filter + Add */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {["all", "LOG", "RST"].map(f => (
               <button key={f} onClick={() => setFilter(f)} style={{ background: filter === f ? C.primary : C.card, color: filter === f ? "#fff" : C.textSub, border: `1.5px solid ${filter === f ? C.primary : C.border}`, borderRadius: 8, padding: "7px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 {f === "all" ? t.all : f}
               </button>
             ))}
+            <select
+              value={selectedSupplier}
+              onChange={e => setSelectedSupplier(e.target.value)}
+              style={{ ...S.input, width: "auto", fontWeight: 600, fontSize: 13, color: selectedSupplier === "all" ? C.textSub : C.primary, border: `1.5px solid ${selectedSupplier === "all" ? C.border : C.primary}`, cursor: "pointer" }}
+            >
+              <option value="all">{t.filter.allSuppliers}</option>
+              {suppliers.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
           </div>
           <button style={S.btn()} onClick={() => setShowAdd(true)}>{t.addBtn}</button>
         </div>
