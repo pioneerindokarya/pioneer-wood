@@ -115,8 +115,10 @@ function fromDbRawmat(r) {
 function toDbProd(r) {
   return {
     id: r.id, date: r.date, shift: r.shift,
-    jam_kerja: r.jamKerja || null, input_rst: r.inputRST || null,
-    output_planer: r.outputPlaner || null, output_pit: r.outputPit || null,
+    jam_kerja: r.jamKerja || null,
+    input_rst_line1: r.inputRSTLine1 || null, input_rst_line2: r.inputRSTLine2 || null,
+    output_planer_line1: r.outputPlanerLine1 || null, output_planer_line2: r.outputPlanerLine2 || null,
+    output_pit: r.outputPit || null,
     output_blok: r.outputBlok || null, jumlah_blok: r.jumlahBlok || null,
     rejected_m3: r.rejectedM3 || null, glue_kg: r.glueKg || null,
     overall_yield: r.overallYield || null, planer_yield: r.planerYield || null,
@@ -127,8 +129,10 @@ function toDbProd(r) {
 function fromDbProd(r) {
   return {
     id: r.id, date: r.date, shift: r.shift,
-    jamKerja: r.jam_kerja, inputRST: r.input_rst,
-    outputPlaner: r.output_planer, outputPit: r.output_pit,
+    jamKerja: r.jam_kerja,
+    inputRSTLine1: r.input_rst_line1, inputRSTLine2: r.input_rst_line2,
+    outputPlanerLine1: r.output_planer_line1, outputPlanerLine2: r.output_planer_line2,
+    outputPit: r.output_pit,
     outputBlok: r.output_blok, jumlahBlok: r.jumlah_blok,
     rejectedM3: r.rejected_m3, glueKg: r.glue_kg,
     overallYield: r.overall_yield, planerYield: r.planer_yield,
@@ -164,9 +168,16 @@ function getTally(r) {
   return r.type === "LOG" ? r.tallyLogVol : r.tallyVol;
 }
 function calcProdMetrics(form) {
-  const rst = toNum(form.inputRST), planer = toNum(form.outputPlaner);
-  const blok = toNum(form.outputBlok), rejected = toNum(form.rejectedM3) || 0;
-  const glue = toNum(form.glueKg), hours = toNum(form.jamKerja);
+  const rst1 = toNum(form.inputRSTLine1) || 0;
+  const rst2 = toNum(form.inputRSTLine2) || 0;
+  const rst = rst1 + rst2 || null;
+  const planer1 = toNum(form.outputPlanerLine1) || 0;
+  const planer2 = toNum(form.outputPlanerLine2) || 0;
+  const planer = planer1 + planer2 || null;
+  const blok = toNum(form.outputBlok);
+  const rejected = toNum(form.rejectedM3) || 0;
+  const glue = toNum(form.glueKg);
+  const hours = toNum(form.jamKerja);
   return {
     overallYield: rst && blok ? ((blok / rst) * 100).toFixed(2) : null,
     planerYield: rst && planer ? ((planer / rst) * 100).toFixed(2) : null,
@@ -528,12 +539,14 @@ function CalcPreview({ metrics, t }) {
   );
 }
 function ProductionForm({ initial, onClose, onSave, t, saving }) {
-  const empty = { date: today(), shift: "1", jamKerja: "8", inputRST: "", outputPlaner: "", outputPit: "", outputBlok: "", jumlahBlok: "", rejectedM3: "", glueKg: "", notes: "" };
+  const empty = { date: today(), shift: "1", jamKerja: "8", inputRSTLine1: "", inputRSTLine2: "", outputPlanerLine1: "", outputPlanerLine2: "", outputPit: "", outputBlok: "", jumlahBlok: "", rejectedM3: "", glueKg: "", notes: "" };
   const [form, setForm] = useState(initial || empty);
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const metrics = calcProdMetrics(form);
-  const valid = form.inputRST && form.outputBlok && form.jamKerja;
+  const valid = (form.inputRSTLine1 || form.inputRSTLine2) && form.outputBlok && form.jamKerja;
   const handleSave = () => { if (!valid) return; onSave({ ...form, id: initial?.id || uid(), ...metrics }); };
+  const totalRST = (toNum(form.inputRSTLine1) || 0) + (toNum(form.inputRSTLine2) || 0);
+  const totalPlaner = (toNum(form.outputPlanerLine1) || 0) + (toNum(form.outputPlanerLine2) || 0);
   return (
     <>
       <CalcPreview metrics={metrics} t={t} />
@@ -541,8 +554,24 @@ function ProductionForm({ initial, onClose, onSave, t, saving }) {
         <Field label={t.common.date}><input type="date" style={S.input} value={form.date} onChange={e => upd("date", e.target.value)} /></Field>
         <Field label={t.production.form.shift}><select style={S.input} value={form.shift} onChange={e => upd("shift", e.target.value)}><option value="1">Shift 1</option><option value="2">Shift 2</option><option value="3">Shift 3</option></select></Field>
         <Field label={t.production.form.jamKerja}><input type="number" step="0.5" style={S.input} value={form.jamKerja} onChange={e => upd("jamKerja", e.target.value)} /></Field>
-        <Field label={t.production.form.inputRST}><input type="number" step="0.01" style={S.input} value={form.inputRST} onChange={e => upd("inputRST", e.target.value)} /></Field>
-        <Field label={t.production.form.outputPlaner}><input type="number" step="0.01" style={S.input} value={form.outputPlaner} onChange={e => upd("outputPlaner", e.target.value)} /></Field>
+      </div>
+      <div style={{ background: "#F9F7F4", borderRadius: 10, padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", marginBottom: 10 }}>{t.production.form.inputRST}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+          <Field label="Line 1 (m³)"><input type="number" step="0.01" style={S.input} value={form.inputRSTLine1} onChange={e => upd("inputRSTLine1", e.target.value)} /></Field>
+          <Field label="Line 2 (m³)"><input type="number" step="0.01" style={S.input} value={form.inputRSTLine2} onChange={e => upd("inputRSTLine2", e.target.value)} /></Field>
+        </div>
+        {totalRST > 0 && <div style={{ fontSize: 13, color: C.primary, fontWeight: 700 }}>Total: {f2(totalRST)} m³</div>}
+      </div>
+      <div style={{ background: "#F9F7F4", borderRadius: 10, padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", marginBottom: 10 }}>{t.production.form.outputPlaner}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+          <Field label="Line 1 (m³)"><input type="number" step="0.01" style={S.input} value={form.outputPlanerLine1} onChange={e => upd("outputPlanerLine1", e.target.value)} /></Field>
+          <Field label="Line 2 (m³)"><input type="number" step="0.01" style={S.input} value={form.outputPlanerLine2} onChange={e => upd("outputPlanerLine2", e.target.value)} /></Field>
+        </div>
+        {totalPlaner > 0 && <div style={{ fontSize: 13, color: C.primary, fontWeight: 700 }}>Total: {f2(totalPlaner)} m³</div>}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
         <Field label={t.production.form.outputPit}><input type="number" step="0.01" style={S.input} value={form.outputPit} onChange={e => upd("outputPit", e.target.value)} /></Field>
         <Field label={t.production.form.outputBlok}><input type="number" step="0.01" style={S.input} value={form.outputBlok} onChange={e => upd("outputBlok", e.target.value)} /></Field>
         <Field label={t.production.form.jumlahBlok}><input type="number" style={S.input} value={form.jumlahBlok} onChange={e => upd("jumlahBlok", e.target.value)} /></Field>
@@ -637,7 +666,7 @@ function ProductionModule({ t, lang }) {
 
   const monthRecords = selectedMonth === "all" ? records : records.filter(r => r.date && r.date.startsWith(selectedMonth));
   const sorted = [...monthRecords].sort((a, b) => a.date > b.date ? -1 : 1);
-  const totalInput = monthRecords.reduce((a, r) => a + (+r.inputRST || 0), 0);
+  const totalInput = monthRecords.reduce((a, r) => a + ((+r.inputRSTLine1 || 0) + (+r.inputRSTLine2 || 0)), 0);
   const totalOutput = monthRecords.reduce((a, r) => a + (+r.outputBlok || 0), 0);
   const totalBlok = monthRecords.reduce((a, r) => a + (+r.jumlahBlok || 0), 0);
   const totalJamKerja = monthRecords.reduce((a, r) => a + (+r.jamKerja || 0), 0);
@@ -678,14 +707,23 @@ function ProductionModule({ t, lang }) {
       ) : (
         <div style={{ background: C.card, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
-            <thead><tr style={{ background: C.bg }}>{[t.production.table.date, t.production.table.shift, t.production.table.inputRST, t.production.table.outputPlaner, t.production.table.outputPit, t.production.table.outputBlok, t.production.table.rejected, t.production.table.glue, t.production.table.yieldPct, t.production.table.planerYield, t.production.table.rejectRate, t.production.table.m3Jam, t.production.table.gluem3, ""].map((h, i) => <th key={i} style={S.th}>{h}</th>)}</tr></thead>
+            <thead><tr style={{ background: C.bg }}>{[t.production.table.date, t.production.table.shift, "Input RST (m³)", "Output Planer (m³)", t.production.table.outputPit, t.production.table.outputBlok, t.production.table.rejected, t.production.table.glue, t.production.table.yieldPct, t.production.table.planerYield, t.production.table.rejectRate, t.production.table.m3Jam, t.production.table.gluem3, ""].map((h, i) => <th key={i} style={S.th}>{h}</th>)}</tr></thead>
             <tbody>
-              {sorted.map(r => (
+              {sorted.map(r => {
+                const totalRST = (+r.inputRSTLine1 || 0) + (+r.inputRSTLine2 || 0);
+                const totalPlaner = (+r.outputPlanerLine1 || 0) + (+r.outputPlanerLine2 || 0);
+                return (
                 <tr key={r.id} onMouseEnter={e => e.currentTarget.style.background = "#FAFAF8"} onMouseLeave={e => e.currentTarget.style.background = ""}>
                   <td style={S.td}>{r.date}</td>
                   <td style={S.td}><span style={S.badge("blue")}>S{r.shift}</span>{r.jamKerja && <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>{r.jamKerja} jam</div>}</td>
-                  <td style={S.td}>{f2(r.inputRST)}</td>
-                  <td style={S.td}>{f2(r.outputPlaner)}</td>
+                  <td style={S.td}>
+                    <div style={{ fontWeight: 700 }}>{f2(totalRST)}</div>
+                    <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>L1: {f2(r.inputRSTLine1)} · L2: {f2(r.inputRSTLine2)}</div>
+                  </td>
+                  <td style={S.td}>
+                    <div style={{ fontWeight: 700 }}>{f2(totalPlaner)}</div>
+                    <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>L1: {f2(r.outputPlanerLine1)} · L2: {f2(r.outputPlanerLine2)}</div>
+                  </td>
                   <td style={S.td}>{r.outputPit ? f2(r.outputPit) : <span style={{ color: C.textLight }}>—</span>}</td>
                   <td style={{ ...S.td, fontWeight: 700 }}><div>{f2(r.outputBlok)} m³</div>{r.jumlahBlok && <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>{r.jumlahBlok} blok</div>}</td>
                   <td style={S.td}>{f2(r.rejectedM3)}</td>
@@ -697,7 +735,8 @@ function ProductionModule({ t, lang }) {
                   <td style={S.td}>{r.gluePerM3 || "—"}</td>
                   <td style={S.td}><div style={{ display: "flex", gap: 6 }}><button style={S.btnSm(C.primary)} onClick={() => setEditing(r)}>{t.common.update}</button><button style={S.btnSm(C.red)} onClick={() => onDelete(r.id)}>✕</button></div></td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
