@@ -657,10 +657,8 @@ function ProductionModule({ t, lang }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 24 }}>
         {[
           { label: t.production.summary.totalInput, val: `${f2(totalInput)} m³`, accent: C.blue },
-          { label: t.production.summary.totalOutput, val: `${f2(totalOutput)} m³`, accent: C.green },
-          { label: t.production.summary.totalBlok, val: `${totalBlok} blok`, accent: C.primary },
-          { label: t.production.summary.avgYield, val: avgYield ? `${avgYield}%` : "—", accent: avgYield && +avgYield >= 40 ? C.green : C.red },
-          { label: t.production.summary.avgPlanerYield, val: avgPlanerYield ? `${avgPlanerYield}%` : "—", accent: C.blue },
+          { label: t.production.summary.totalOutput, val: `${f2(totalOutput)} m³`, sub: `${totalBlok} blok`, accent: C.green },
+          { label: t.production.summary.avgYield, val: avgYield ? `${avgYield}%` : "—", sub: avgPlanerYield ? `Planer: ${avgPlanerYield}%` : null, accent: avgYield && +avgYield >= 40 ? C.green : C.red },
           { label: t.production.summary.avgM3Jam, val: avgM3 || "—", accent: C.amber },
           { label: t.production.summary.avgGluem3, val: avgGlue ? `${avgGlue} kg` : "—", accent: C.purple },
           { label: t.production.summary.totalDays, val: `${monthRecords.length}`, sub: `${f2(totalJamKerja, 1)} ${lang === "id" ? "jam kerja" : "工时"}`, accent: C.textSub },
