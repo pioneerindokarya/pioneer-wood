@@ -52,7 +52,7 @@ const T = {
     },
     stock: {
       appName: "Stok Harian", addBtn: "+ Tambah Entry Stok", updateBtn: "Update",
-      opening: { btn: "Set Stok Awal", title: "Stok Awal Barang Jadi", label: "Barang Jadi Awal (m³)", hint: "Input sekali saat pertama kali menggunakan sistem", notSet: "Stok awal belum diset", notSetHint: "Set stok awal Barang Jadi sebelum memulai" },
+      opening: { btn: "Set Stok Awal", title: "Stok Awal", bjLabel: "Barang Jadi Awal (m³)", hint: "Input sekali saat pertama kali menggunakan sistem", notSet: "Stok awal belum diset", notSetHint: "Set stok awal sebelum memulai" },
       auto: { label: "⚡ Otomatis dari modul lain", incomingRST: "Masuk RST", incomingGesek: "Masuk LOG Gesek", totalIncoming: "Total Masuk", prodInput: "Input Produksi", prodOutput: "Output Produksi", prevBJ: "Barang Jadi Kemarin" },
       manual: { label: "✏️ Input Manual", kdPIK: "KD PIK (m³)", kdLuar: "KD LUAR (m³)", rstKering: "RST KERING (m³)", wip: "WIP (m³)", ekspor: "EKSPOR KELUAR (m³)", eksporHint: "Kosongkan jika tidak ada ekspor hari ini" },
       calc: { kdTotal: "Total KD", bj: "BARANG JADI", netBJ: "Net Barang Jadi" },
@@ -99,7 +99,7 @@ const T = {
     },
     stock: {
       appName: "每日库存", addBtn: "+ 添加库存记录", updateBtn: "更新",
-      opening: { btn: "设置期初库存", title: "成品期初库存", label: "期初成品库存 (m³)", hint: "首次使用时填写一次即可", notSet: "未设置期初库存", notSetHint: "请先设置成品期初库存" },
+      opening: { btn: "设置期初库存", title: "期初库存", bjLabel: "期初成品库存 (m³)", hint: "首次使用时填写一次即可", notSet: "未设置期初库存", notSetHint: "请先设置期初库存" },
       auto: { label: "⚡ 自动从其他模块获取", incomingRST: "RST入库", incomingGesek: "锯切入库", totalIncoming: "总入库", prodInput: "生产投入", prodOutput: "生产产出", prevBJ: "昨日成品库存" },
       manual: { label: "✏️ 手动输入", kdPIK: "内部窑干 (m³)", kdLuar: "外部窑干 (m³)", rstKering: "已干RST (m³)", wip: "在制品 (m³)", ekspor: "出口扣减 (m³)", eksporHint: "当日无出口则留空" },
       calc: { kdTotal: "窑干合计", bj: "成品库存", netBJ: "净成品库存" },
@@ -961,18 +961,28 @@ function StockAutoBox({ label, value }) {
   );
 }
 
-function OpeningStockModal({ t, onClose, onSave }) {
-  const [val, setVal] = useState("");
+function OpeningStockModal({ t, onClose, onSave, initial }) {
+  const [form, setForm] = useState({
+    kdPIK: initial?.kdPIK ?? "", kdLuar: initial?.kdLuar ?? "",
+    rstKering: initial?.rstKering ?? "", wip: initial?.wip ?? "", bj: initial?.bj ?? "",
+  });
+  const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const inp = { width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, color: C.text, background: "#fff", boxSizing: "border-box" };
+  const lbl = { fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 5 };
+  const valid = Object.values(form).some(v => v !== "");
   return (
     <Modal title={t.stock.opening.title} onClose={onClose}>
-      <div style={{ marginBottom: 14 }}>
-        <label style={{ fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 5 }}>{t.stock.opening.label}</label>
-        <input type="number" step="0.01" style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, color: C.text, background: "#fff", boxSizing: "border-box" }} value={val} onChange={e => setVal(e.target.value)} autoFocus />
-        <div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>{t.stock.opening.hint}</div>
+      <div style={{ fontSize: 12, color: C.textSub, marginBottom: 16 }}>{t.stock.opening.hint}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.kdPIK}</label><input type="number" step="0.01" style={inp} value={form.kdPIK} onChange={e => upd("kdPIK", e.target.value)} /></div>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.kdLuar}</label><input type="number" step="0.01" style={inp} value={form.kdLuar} onChange={e => upd("kdLuar", e.target.value)} /></div>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.rstKering}</label><input type="number" step="0.01" style={inp} value={form.rstKering} onChange={e => upd("rstKering", e.target.value)} /></div>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.wip}</label><input type="number" step="0.01" style={inp} value={form.wip} onChange={e => upd("wip", e.target.value)} /></div>
       </div>
+      <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.opening.bjLabel}</label><input type="number" step="0.01" style={inp} value={form.bj} onChange={e => upd("bj", e.target.value)} /><div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>{t.stock.opening.hint}</div></div>
       <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
         <button style={{ background: "transparent", color: C.primary, border: `1.5px solid ${C.primary}`, borderRadius: 8, padding: "8px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer" }} onClick={onClose}>{t.common.cancel}</button>
-        <button style={{ background: val ? C.primary : "#aaa", color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer" }} onClick={() => val && onSave(+val)} disabled={!val}>{t.common.save}</button>
+        <button style={{ background: valid ? C.primary : "#aaa", color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer" }} onClick={() => valid && onSave({ kdPIK: +form.kdPIK || 0, kdLuar: +form.kdLuar || 0, rstKering: +form.rstKering || 0, wip: +form.wip || 0, bj: +form.bj || 0 })} disabled={!valid}>{t.common.save}</button>
       </div>
     </Modal>
   );
@@ -1124,20 +1134,20 @@ function StockModule({ t, lang }) {
       supabase.from("stock").select("*").order("date", { ascending: false }),
       supabase.from("deliveries").select("*"),
       supabase.from("production").select("*"),
-      supabase.from("settings").select("value").eq("key", "opening_bj").single(),
+      supabase.from("settings").select("value").eq("key", "opening_stock").single(),
     ]);
     if (sr.error) { setError(sr.error.message); setLoading(false); return; }
     setRecords(sr.data.map(fromDbStock));
     setDeliveries((dr.data || []).map(fromDbRawmat));
     setProduction((pr.data || []).map(fromDbProd));
-    setOpeningBJ(setting.data ? parseFloat(setting.data.value) : null);
+    setOpeningBJ(setting.data ? JSON.parse(setting.data.value) : null);
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const onSaveOpening = async (val) => {
-    await supabase.from("settings").upsert({ key: "opening_bj", value: String(val) });
+    await supabase.from("settings").upsert({ key: "opening_stock", value: JSON.stringify(val) });
     setOpeningBJ(val); setShowOpening(false);
   };
 
@@ -1161,17 +1171,17 @@ function StockModule({ t, lang }) {
     await fetchAll();
   };
 
-  const prevBJForNew = records.length > 0 ? records[0].netBJ : (openingBJ || 0);
-  const prevBJForEdit = (r) => { const idx = records.findIndex(x => x.id === r.id); return idx < records.length - 1 ? records[idx + 1].netBJ : (openingBJ || 0); };
+  const prevBJForNew = records.length > 0 ? records[0].netBJ : (openingBJ?.bj || 0);
+  const prevBJForEdit = (r) => { const idx = records.findIndex(x => x.id === r.id); return idx < records.length - 1 ? records[idx + 1].netBJ : (openingBJ?.bj || 0); };
   const monthRecords = selectedMonth === "all" ? records : records.filter(r => r.date && r.date.startsWith(selectedMonth));
   const latest = monthRecords[0] || null;
   const thS = (color, bl = false) => ({ ...S.th, color, fontWeight: 700, borderLeft: bl ? `1px solid ${C.border}` : "none" });
 
   const summaryCards = [
-    { label: t.stock.summary.rstKering, val: latest ? f2(latest.rstKering) : "—", unit: "m³", sub: latest?.date, accent: C.amber },
-    { label: t.stock.summary.kdTotal, val: latest ? f2(latest.kdTotal) : "—", unit: "m³", sub: latest?.date, accent: C.blue },
-    { label: t.stock.summary.wip, val: latest ? f2(latest.wip) : "—", unit: "m³", sub: latest?.date, accent: "#7B68EE" },
-    { label: t.stock.summary.netBJ, val: latest ? f2(latest.netBJ) : "—", unit: "m³", sub: latest?.date, accent: C.green },
+    { label: t.stock.summary.rstKering, val: latest ? f2(latest.rstKering) : (openingBJ ? f2(openingBJ.rstKering) : "—"), unit: "m³", sub: latest?.date, accent: C.amber },
+    { label: t.stock.summary.kdTotal, val: latest ? f2(latest.kdTotal) : (openingBJ ? f2((openingBJ.kdPIK||0)+(openingBJ.kdLuar||0)) : "—"), unit: "m³", sub: latest?.date, accent: C.blue },
+    { label: t.stock.summary.wip, val: latest ? f2(latest.wip) : (openingBJ ? f2(openingBJ.wip) : "—"), unit: "m³", sub: latest?.date, accent: "#7B68EE" },
+    { label: t.stock.summary.netBJ, val: latest ? f2(latest.netBJ) : (openingBJ ? f2(openingBJ.bj) : "—"), unit: "m³", sub: latest?.date, accent: C.green },
     { label: t.stock.summary.lastIncoming, val: latest ? f2(latest.totalIncoming) : "—", unit: "m³", sub: latest?.date, accent: C.primary },
     { label: t.stock.summary.lastProdOutput, val: latest ? f2(latest.prodOutput) : "—", unit: "m³", sub: latest?.date, accent: C.red },
   ];
@@ -1276,7 +1286,7 @@ function StockModule({ t, lang }) {
           </table>
         </div>
       )}
-      {showOpening && <OpeningStockModal t={t} onClose={() => setShowOpening(false)} onSave={onSaveOpening} />}
+      {showOpening && <OpeningStockModal t={t} onClose={() => setShowOpening(false)} onSave={onSaveOpening} initial={openingBJ} />}
       {showOpname && <StockOpnameModal t={t} lang={lang} prevRecord={records[0] || null} onClose={() => setShowOpname(false)} onSave={onSave} />}
       {showAdd && <Modal title={t.stock.addBtn} onClose={() => setShowAdd(false)}><StockEntryForm t={t} deliveries={deliveries} production={production} prevBJ={prevBJForNew} onClose={() => setShowAdd(false)} onSave={onSave} saving={saving} /></Modal>}
       {editing && <Modal title={t.common.update} onClose={() => setEditing(null)}><StockEntryForm t={t} deliveries={deliveries} production={production} prevBJ={prevBJForEdit(editing)} onClose={() => setEditing(null)} onSave={onSave} initial={editing} saving={saving} /></Modal>}
