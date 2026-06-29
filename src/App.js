@@ -16,7 +16,7 @@ const C = {
 // ─── TRANSLATIONS ──────────────────────────────────────────────────────────
 const T = {
   id: {
-    nav: { rawmat: "Bahan Baku", production: "Produksi" },
+    nav: { rawmat: "Bahan Baku", production: "Produksi", stock: "Stok" },
     langToggle: "切换中文",
     common: { save: "Simpan", cancel: "Batal", date: "Tanggal", notes: "Catatan", loading: "Memuat...", noData: "Belum ada data", allMonths: "Semua Bulan", thisMonth: "Bulan Ini", exportBtn: "Export Laporan", all: "Semua", update: "Update" },
     rawmat: {
@@ -50,9 +50,20 @@ const T = {
       summary: { totalInput: "Total Input RST", totalOutput: "Total Output Blok", totalBlok: "Total Blok", avgYield: "Avg Yield %", avgPlanerYield: "Avg Planer Yield %", avgM3Jam: "Avg m³/Jam", avgGluem3: "Avg Glue/m³", totalDays: "Hari Produksi" },
       export: { title: "Laporan Produksi", copy: "Salin", copied: "Tersalin!", print: "Print", detail: "Detail Produksi Harian" },
     },
+    stock: {
+      appName: "Stok Harian", addBtn: "+ Tambah Entry Stok", updateBtn: "Update",
+      opening: { btn: "Set Stok Awal", title: "Stok Awal Barang Jadi", label: "Barang Jadi Awal (m³)", hint: "Input sekali saat pertama kali menggunakan sistem", notSet: "Stok awal belum diset", notSetHint: "Set stok awal Barang Jadi sebelum memulai" },
+      auto: { label: "⚡ Otomatis dari modul lain", incomingRST: "Masuk RST", incomingGesek: "Masuk LOG Gesek", totalIncoming: "Total Masuk", prodInput: "Input Produksi", prodOutput: "Output Produksi", prevBJ: "Barang Jadi Kemarin" },
+      manual: { label: "✏️ Input Manual", kdPIK: "KD PIK (m³)", kdLuar: "KD LUAR (m³)", rstKering: "RST KERING (m³)", wip: "WIP (m³)", ekspor: "EKSPOR KELUAR (m³)", eksporHint: "Kosongkan jika tidak ada ekspor hari ini" },
+      calc: { kdTotal: "Total KD", bj: "BARANG JADI", netBJ: "Net Barang Jadi" },
+      opname: { btn: "Koreksi Opname", title: "Koreksi Stock Opname", calculated: "Nilai Sistem", actual: "Nilai Aktual (Fisik)", variance: "Selisih", hint: "Kosongkan field yang tidak dikoreksi — akan mengikuti nilai sistem", label: "⚖️ OPNAME" },
+      table: { date: "Tanggal", inRST: "Masuk RST", inGesek: "Masuk Gesek", totalIn: "Total Masuk", kdPIK: "KD PIK", kdLuar: "KD LUAR", kdTotal: "Total KD", rstKering: "RST KERING", prodInput: "Input Prod", prodOutput: "Output Prod", wip: "WIP", ekspor: "EKSPOR", netBJ: "Net BJ" },
+      summary: { rstKering: "RST KERING", kdTotal: "Total KD", wip: "WIP", netBJ: "Net Barang Jadi", lastIncoming: "Total Masuk", lastProdOutput: "Output Produksi" },
+      noData: "Belum ada data stok",
+    },
   },
   cn: {
-    nav: { rawmat: "原材料", production: "生产" },
+    nav: { rawmat: "原材料", production: "生产", stock: "库存" },
     langToggle: "Bahasa ID",
     common: { save: "保存", cancel: "取消", date: "日期", notes: "备注", loading: "加载中...", noData: "暂无数据", allMonths: "全部月份", thisMonth: "本月", exportBtn: "导出报告", all: "全部", update: "更新" },
     rawmat: {
@@ -85,6 +96,17 @@ const T = {
       table: { date: "日期", shift: "班次", inputRST: "RST投入 (m³)", outputPlaner: "刨床产量 (m³)", outputPit: "坑位产量 (m³)", outputBlok: "成品", rejected: "废料 (m³)", glue: "胶水 (kg)", yieldPct: "出材率 %", planerYield: "刨床 %", rejectRate: "废品率 %", m3Jam: "m³/时", gluem3: "胶水/m³" },
       summary: { totalInput: "RST总投入", totalOutput: "成品总量", totalBlok: "总块数", avgYield: "平均出材率 %", avgPlanerYield: "刨床平均出材率 %", avgM3Jam: "平均m³/小时", avgGluem3: "平均胶水/m³", totalDays: "生产天数" },
       export: { title: "生产报告", copy: "复制", copied: "已复制!", print: "打印", detail: "每日生产明细" },
+    },
+    stock: {
+      appName: "每日库存", addBtn: "+ 添加库存记录", updateBtn: "更新",
+      opening: { btn: "设置期初库存", title: "成品期初库存", label: "期初成品库存 (m³)", hint: "首次使用时填写一次即可", notSet: "未设置期初库存", notSetHint: "请先设置成品期初库存" },
+      auto: { label: "⚡ 自动从其他模块获取", incomingRST: "RST入库", incomingGesek: "锯切入库", totalIncoming: "总入库", prodInput: "生产投入", prodOutput: "生产产出", prevBJ: "昨日成品库存" },
+      manual: { label: "✏️ 手动输入", kdPIK: "内部窑干 (m³)", kdLuar: "外部窑干 (m³)", rstKering: "已干RST (m³)", wip: "在制品 (m³)", ekspor: "出口扣减 (m³)", eksporHint: "当日无出口则留空" },
+      calc: { kdTotal: "窑干合计", bj: "成品库存", netBJ: "净成品库存" },
+      opname: { btn: "盘点修正", title: "库存盘点修正", calculated: "系统值", actual: "实际盘点值", variance: "差异", hint: "留空字段将保留系统值", label: "⚖️ 盘点" },
+      table: { date: "日期", inRST: "RST入库", inGesek: "锯切入库", totalIn: "总入库", kdPIK: "内部窑干", kdLuar: "外部窑干", kdTotal: "窑干合计", rstKering: "已干RST", prodInput: "生产投入", prodOutput: "生产产出", wip: "在制品", ekspor: "出口", netBJ: "净成品" },
+      summary: { rstKering: "已干RST", kdTotal: "窑干合计", wip: "在制品", netBJ: "净成品库存", lastIncoming: "总入库", lastProdOutput: "生产产出" },
+      noData: "暂无库存数据",
     },
   },
 };
@@ -891,12 +913,383 @@ function ProductionModule({ t, lang }) {
   );
 }
 
+// ─── SUPABASE HELPERS — STOCK ──────────────────────────────────────────────
+function toDbStock(r) {
+  return {
+    id: r.id, date: r.date, is_opname: r.isOpname || false,
+    incoming_rst: r.incomingRST || 0, incoming_gesek: r.incomingGesek || 0, total_incoming: r.totalIncoming || 0,
+    prod_input: r.prodInput || 0, prod_output: r.prodOutput || 0,
+    kd_pik: r.kdPIK || 0, kd_luar: r.kdLuar || 0, kd_total: r.kdTotal || 0,
+    rst_kering: r.rstKering || 0, wip: r.wip || 0, ekspor: r.ekspor || 0,
+    bj: r.bj || 0, net_bj: r.netBJ || 0, prev_bj: r.prevBJ || 0,
+    corrections: r.corrections || null,
+  };
+}
+function fromDbStock(r) {
+  return {
+    id: r.id, date: r.date, isOpname: r.is_opname,
+    incomingRST: r.incoming_rst, incomingGesek: r.incoming_gesek, totalIncoming: r.total_incoming,
+    prodInput: r.prod_input, prodOutput: r.prod_output,
+    kdPIK: r.kd_pik, kdLuar: r.kd_luar, kdTotal: r.kd_total,
+    rstKering: r.rst_kering, wip: r.wip, ekspor: r.ekspor,
+    bj: r.bj, netBJ: r.net_bj, prevBJ: r.prev_bj,
+    corrections: r.corrections,
+  };
+}
+
+// ─── STOCK HELPERS ─────────────────────────────────────────────────────────
+function calcStockIncoming(deliveries, date) {
+  const incomingRST = deliveries.filter(d => d.type === "RST" && getRawmatStatus(d) === "final" && d.date === date).reduce((a, d) => a + (getEffectiveFinal(d) || 0), 0);
+  const incomingGesek = deliveries.filter(d => d.type === "LOG" && d.gesekDate === date && d.gesekVol != null).reduce((a, d) => a + (d.gesekVol || 0), 0);
+  return { incomingRST, incomingGesek, totalIncoming: incomingRST + incomingGesek };
+}
+function calcStockProduction(production, date) {
+  const dayProd = production.filter(p => p.date === date);
+  return {
+    prodInput: dayProd.reduce((a, p) => a + ((+p.inputRSTLine1 || 0) + (+p.inputRSTLine2 || 0)), 0),
+    prodOutput: dayProd.reduce((a, p) => a + (+p.outputBlok || 0), 0),
+  };
+}
+
+// ─── STOCK COMPONENTS ──────────────────────────────────────────────────────
+function StockAutoBox({ label, value }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${C.green}20` }}>
+      <span style={{ fontSize: 12, color: C.textSub, fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: 15, fontWeight: 700, color: C.primary }}>{f2(value)} m³</span>
+    </div>
+  );
+}
+
+function OpeningStockModal({ t, onClose, onSave }) {
+  const [val, setVal] = useState("");
+  return (
+    <Modal title={t.stock.opening.title} onClose={onClose}>
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 5 }}>{t.stock.opening.label}</label>
+        <input type="number" step="0.01" style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, color: C.text, background: "#fff", boxSizing: "border-box" }} value={val} onChange={e => setVal(e.target.value)} autoFocus />
+        <div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>{t.stock.opening.hint}</div>
+      </div>
+      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+        <button style={{ background: "transparent", color: C.primary, border: `1.5px solid ${C.primary}`, borderRadius: 8, padding: "8px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer" }} onClick={onClose}>{t.common.cancel}</button>
+        <button style={{ background: val ? C.primary : "#aaa", color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer" }} onClick={() => val && onSave(+val)} disabled={!val}>{t.common.save}</button>
+      </div>
+    </Modal>
+  );
+}
+
+function StockOpnameModal({ t, prevRecord, onClose, onSave, lang }) {
+  const [date, setDate] = useState(today());
+  const [form, setForm] = useState({ rstKering: "", kdPIK: "", kdLuar: "", wip: "", bj: "" });
+  const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const fields = [
+    { key: "rstKering", label: t.stock.manual.rstKering.replace(" (m³)", ""), sys: prevRecord?.rstKering },
+    { key: "kdPIK", label: t.stock.manual.kdPIK.replace(" (m³)", ""), sys: prevRecord?.kdPIK },
+    { key: "kdLuar", label: t.stock.manual.kdLuar.replace(" (m³)", ""), sys: prevRecord?.kdLuar },
+    { key: "wip", label: t.stock.manual.wip.replace(" (m³)", ""), sys: prevRecord?.wip },
+    { key: "bj", label: "Net Barang Jadi", sys: prevRecord?.netBJ },
+  ];
+  const valid = Object.values(form).some(v => v !== "");
+  const handleSave = () => {
+    if (!valid) return;
+    const corrections = {};
+    fields.forEach(f => { if (form[f.key] !== "") corrections[f.key] = { sys: f.sys || 0, actual: +form[f.key], variance: +(+form[f.key] - (f.sys || 0)).toFixed(2) }; });
+    onSave({
+      id: uid(), date, isOpname: true, corrections,
+      rstKering: form.rstKering !== "" ? +form.rstKering : (prevRecord?.rstKering || 0),
+      kdPIK: form.kdPIK !== "" ? +form.kdPIK : (prevRecord?.kdPIK || 0),
+      kdLuar: form.kdLuar !== "" ? +form.kdLuar : (prevRecord?.kdLuar || 0),
+      kdTotal: (form.kdPIK !== "" ? +form.kdPIK : (prevRecord?.kdPIK || 0)) + (form.kdLuar !== "" ? +form.kdLuar : (prevRecord?.kdLuar || 0)),
+      wip: form.wip !== "" ? +form.wip : (prevRecord?.wip || 0),
+      netBJ: form.bj !== "" ? +form.bj : (prevRecord?.netBJ || 0),
+      bj: form.bj !== "" ? +form.bj : (prevRecord?.netBJ || 0),
+      incomingRST: 0, incomingGesek: 0, totalIncoming: 0, prodInput: 0, prodOutput: 0, ekspor: 0, prevBJ: prevRecord?.netBJ || 0,
+    });
+  };
+  return (
+    <Modal title={t.stock.opname.title} onClose={onClose}>
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 5 }}>{t.common.date}</label>
+        <input type="date" style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, color: C.text, background: "#fff", boxSizing: "border-box" }} value={date} onChange={e => setDate(e.target.value)} />
+      </div>
+      <div style={{ fontSize: 11, color: C.textSub, marginBottom: 12, fontWeight: 600 }}>{t.stock.opname.hint}</div>
+      <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", marginBottom: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: C.bg, padding: "8px 12px" }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: C.textSub, textTransform: "uppercase" }}>Field</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: C.textSub, textTransform: "uppercase", textAlign: "center" }}>{t.stock.opname.calculated}</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: C.green, textTransform: "uppercase", textAlign: "center" }}>{t.stock.opname.actual}</div>
+        </div>
+        {fields.map(f => {
+          const actual = form[f.key] !== "" ? +form[f.key] : null;
+          const variance = actual !== null ? (actual - (f.sys || 0)).toFixed(2) : null;
+          const varPos = variance !== null && +variance >= 0;
+          return (
+            <div key={f.key} style={{ borderTop: `1px solid ${C.border}`, padding: "10px 12px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, alignItems: "center" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.primary }}>{f.label}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.textSub, textAlign: "center" }}>{f2(f.sys || 0)} m³</div>
+              <div>
+                <input type="number" step="0.01" style={{ width: "100%", padding: "7px 10px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, color: C.text, background: "#fff", boxSizing: "border-box" }} value={form[f.key]} placeholder={f2(f.sys || 0)} onChange={e => upd(f.key, e.target.value)} />
+                {variance !== null && <div style={{ fontSize: 11, fontWeight: 700, color: varPos ? C.green : C.red, marginTop: 3, textAlign: "center" }}>{varPos ? "+" : ""}{variance} m³</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+        <button style={{ background: "transparent", color: C.primary, border: `1.5px solid ${C.primary}`, borderRadius: 8, padding: "8px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer" }} onClick={onClose}>{t.common.cancel}</button>
+        <button style={{ background: valid ? C.primary : "#aaa", color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer" }} onClick={handleSave} disabled={!valid}>{t.common.save}</button>
+      </div>
+    </Modal>
+  );
+}
+
+function StockEntryForm({ t, deliveries, production, prevBJ, onClose, onSave, initial, saving }) {
+  const [date, setDate] = useState(initial?.date || today());
+  const [form, setForm] = useState({ kdPIK: initial?.kdPIK ?? "", kdLuar: initial?.kdLuar ?? "", rstKering: initial?.rstKering ?? "", wip: initial?.wip ?? "", ekspor: initial?.ekspor ?? "" });
+  const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const [autoData, setAutoData] = useState({ incomingRST: 0, incomingGesek: 0, totalIncoming: 0, prodInput: 0, prodOutput: 0 });
+  useEffect(() => {
+    setAutoData({ ...calcStockIncoming(deliveries, date), ...calcStockProduction(production, date) });
+  }, [date, deliveries, production]);
+  const kdTotal = (toNum(form.kdPIK) || 0) + (toNum(form.kdLuar) || 0);
+  const eksporVal = toNum(form.ekspor) || 0;
+  const bj = (prevBJ || 0) + autoData.prodOutput;
+  const netBJ = bj - eksporVal;
+  const valid = form.rstKering !== "" || form.kdPIK !== "";
+  const handleSave = () => {
+    if (!valid) return;
+    onSave({ id: initial?.id || uid(), date, incomingRST: autoData.incomingRST, incomingGesek: autoData.incomingGesek, totalIncoming: autoData.totalIncoming, prodInput: autoData.prodInput, prodOutput: autoData.prodOutput, kdPIK: toNum(form.kdPIK) || 0, kdLuar: toNum(form.kdLuar) || 0, kdTotal, rstKering: toNum(form.rstKering) || 0, wip: toNum(form.wip) || 0, ekspor: eksporVal, bj, netBJ, prevBJ: prevBJ || 0 });
+  };
+  const inp = { width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, color: C.text, background: "#fff", boxSizing: "border-box" };
+  const lbl = { fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 5 };
+  return (
+    <>
+      <div style={{ marginBottom: 14 }}><label style={lbl}>{t.common.date}</label><input type="date" style={inp} value={date} onChange={e => setDate(e.target.value)} /></div>
+      <div style={{ background: C.greenLight, border: `1px solid ${C.green}30`, borderRadius: 10, padding: "14px 16px", marginBottom: 20 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.green, marginBottom: 10 }}>{t.stock.auto.label}</div>
+        <StockAutoBox label={t.stock.auto.incomingRST} value={autoData.incomingRST} />
+        <StockAutoBox label={t.stock.auto.incomingGesek} value={autoData.incomingGesek} />
+        <StockAutoBox label={t.stock.auto.totalIncoming} value={autoData.totalIncoming} />
+        <div style={{ height: 8 }} />
+        <StockAutoBox label={t.stock.auto.prodInput} value={autoData.prodInput} />
+        <StockAutoBox label={t.stock.auto.prodOutput} value={autoData.prodOutput} />
+        <div style={{ height: 8 }} />
+        <StockAutoBox label={t.stock.auto.prevBJ} value={prevBJ || 0} />
+      </div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: C.textSub, marginBottom: 12 }}>{t.stock.manual.label}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.kdPIK}</label><input type="number" step="0.01" style={inp} value={form.kdPIK} onChange={e => upd("kdPIK", e.target.value)} /></div>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.kdLuar}</label><input type="number" step="0.01" style={inp} value={form.kdLuar} onChange={e => upd("kdLuar", e.target.value)} /></div>
+      </div>
+      {(form.kdPIK || form.kdLuar) && <div style={{ background: C.blueLight, borderRadius: 8, padding: "8px 14px", marginBottom: 14, display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 12, color: C.blue, fontWeight: 700 }}>{t.stock.calc.kdTotal}</span><span style={{ fontSize: 16, fontWeight: 800, color: C.primary }}>{f2(kdTotal)} m³</span></div>}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.rstKering}</label><input type="number" step="0.01" style={inp} value={form.rstKering} onChange={e => upd("rstKering", e.target.value)} /></div>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.wip}</label><input type="number" step="0.01" style={inp} value={form.wip} onChange={e => upd("wip", e.target.value)} /></div>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.ekspor}</label><input type="number" step="0.01" style={inp} value={form.ekspor} onChange={e => upd("ekspor", e.target.value)} /><div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>{t.stock.manual.eksporHint}</div></div>
+      </div>
+      <div style={{ background: C.primary, borderRadius: 10, padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", marginBottom: 8 }}>{t.stock.calc.bj}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{t.stock.auto.prevBJ} + {t.stock.auto.prodOutput}</span><span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{f2(prevBJ || 0)} + {f2(autoData.prodOutput)} = {f2(bj)} m³</span></div>
+        {eksporVal > 0 && <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>− Ekspor</span><span style={{ fontSize: 13, fontWeight: 700, color: C.amberLight }}>− {f2(eksporVal)} m³</span></div>}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.2)", paddingTop: 8, display: "flex", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{t.stock.calc.netBJ}</span>
+          <span style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>{f2(netBJ)} m³</span>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+        <button style={S.btnOut} onClick={onClose}>{t.common.cancel}</button>
+        <button style={S.btn(valid && !saving ? C.primary : "#aaa")} onClick={handleSave} disabled={!valid || saving}>{saving ? "..." : t.common.save}</button>
+      </div>
+    </>
+  );
+}
+
+function StockModule({ t, lang }) {
+  const [records, setRecords] = useState([]);
+  const [deliveries, setDeliveries] = useState([]);
+  const [production, setProduction] = useState([]);
+  const [openingBJ, setOpeningBJ] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [showOpening, setShowOpening] = useState(false);
+  const [showOpname, setShowOpname] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth());
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true); setError(null);
+    const [sr, dr, pr, setting] = await Promise.all([
+      supabase.from("stock").select("*").order("date", { ascending: false }),
+      supabase.from("deliveries").select("*"),
+      supabase.from("production").select("*"),
+      supabase.from("settings").select("value").eq("key", "opening_bj").single(),
+    ]);
+    if (sr.error) { setError(sr.error.message); setLoading(false); return; }
+    setRecords(sr.data.map(fromDbStock));
+    setDeliveries((dr.data || []).map(fromDbRawmat));
+    setProduction((pr.data || []).map(fromDbProd));
+    setOpeningBJ(setting.data ? parseFloat(setting.data.value) : null);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const onSaveOpening = async (val) => {
+    await supabase.from("settings").upsert({ key: "opening_bj", value: String(val) });
+    setOpeningBJ(val); setShowOpening(false);
+  };
+
+  const onSave = async (rec) => {
+    setSaving(true);
+    const existing = records.find(r => r.id === rec.id);
+    if (existing) {
+      const { error } = await supabase.from("stock").update(toDbStock(rec)).eq("id", rec.id);
+      if (error) { alert("Error: " + error.message); setSaving(false); return; }
+    } else {
+      const { error } = await supabase.from("stock").insert([toDbStock(rec)]);
+      if (error) { alert("Error: " + error.message); setSaving(false); return; }
+    }
+    await fetchAll();
+    setSaving(false); setShowAdd(false); setEditing(null); setShowOpname(false);
+  };
+
+  const onDelete = async (id) => {
+    if (!window.confirm("Hapus data ini?")) return;
+    await supabase.from("stock").delete().eq("id", id);
+    await fetchAll();
+  };
+
+  const prevBJForNew = records.length > 0 ? records[0].netBJ : (openingBJ || 0);
+  const prevBJForEdit = (r) => { const idx = records.findIndex(x => x.id === r.id); return idx < records.length - 1 ? records[idx + 1].netBJ : (openingBJ || 0); };
+  const monthRecords = selectedMonth === "all" ? records : records.filter(r => r.date && r.date.startsWith(selectedMonth));
+  const latest = monthRecords[0] || null;
+  const thS = (color, bl = false) => ({ ...S.th, color, fontWeight: 700, borderLeft: bl ? `1px solid ${C.border}` : "none" });
+
+  const summaryCards = [
+    { label: t.stock.summary.rstKering, val: latest ? f2(latest.rstKering) : "—", unit: "m³", sub: latest?.date, accent: C.amber },
+    { label: t.stock.summary.kdTotal, val: latest ? f2(latest.kdTotal) : "—", unit: "m³", sub: latest?.date, accent: C.blue },
+    { label: t.stock.summary.wip, val: latest ? f2(latest.wip) : "—", unit: "m³", sub: latest?.date, accent: "#7B68EE" },
+    { label: t.stock.summary.netBJ, val: latest ? f2(latest.netBJ) : "—", unit: "m³", sub: latest?.date, accent: C.green },
+    { label: t.stock.summary.lastIncoming, val: latest ? f2(latest.totalIncoming) : "—", unit: "m³", sub: latest?.date, accent: C.primary },
+    { label: t.stock.summary.lastProdOutput, val: latest ? f2(latest.prodOutput) : "—", unit: "m³", sub: latest?.date, accent: C.red },
+  ];
+
+  return (
+    <div>
+      <ErrorBar error={error} onRetry={fetchAll} />
+      {openingBJ === null && (
+        <div style={{ background: C.amberLight, border: `1px solid ${C.amber}`, borderRadius: 10, padding: "14px 18px", marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontWeight: 700, color: C.amber, fontSize: 14 }}>⚠️ {t.stock.opening.notSet}</div>
+            <div style={{ fontSize: 12, color: C.textSub, marginTop: 2 }}>{t.stock.opening.notSetHint}</div>
+          </div>
+          <button style={S.btn(C.amber)} onClick={() => setShowOpening(true)}>{t.stock.opening.btn}</button>
+        </div>
+      )}
+      {openingBJ !== null && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+          <button onClick={() => setShowOpening(true)} style={{ background: "none", border: "none", color: C.textSub, fontSize: 12, cursor: "pointer", fontWeight: 600 }}>{t.stock.opening.btn}: {f2(openingBJ)} m³ ✏️</button>
+        </div>
+      )}
+      <MonthBar selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} onExport={() => {}} t={t} lang={lang} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 24 }}>
+        {summaryCards.map((c, i) => (
+          <div key={i} style={S.statCard(c.accent)}>
+            <div style={S.label}>{c.label}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: C.primary }}>{c.val} <span style={{ fontSize: 12, fontWeight: 400, color: C.textSub }}>{c.unit}</span></div>
+            {c.sub && <div style={{ fontSize: 11, color: C.textLight, marginTop: 3 }}>📅 {c.sub}</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginBottom: 16 }}>
+        <button style={S.btn("#7B68EE")} onClick={() => setShowOpname(true)}>{t.stock.opname.btn}</button>
+        <button style={S.btn()} onClick={() => setShowAdd(true)}>{t.stock.addBtn}</button>
+      </div>
+      {loading ? <div style={{ textAlign: "center", padding: 48, color: C.textLight }}>{t.common.loading}</div> : monthRecords.length === 0 ? (
+        <div style={{ ...S.card, textAlign: "center", padding: 64, color: C.textLight }}><div style={{ fontSize: 44, marginBottom: 12 }}>📦</div><div style={{ fontWeight: 700 }}>{t.stock.noData}</div></div>
+      ) : (
+        <div style={{ background: C.card, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1200 }}>
+            <thead>
+              <tr style={{ background: C.bg }}>
+                <th style={{ ...S.th, borderBottom: `1px solid ${C.border}` }} rowSpan={2}>{t.common.date}</th>
+                <th colSpan={3} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.green, textTransform: "uppercase", borderBottom: `1px solid ${C.border}`, textAlign: "center", background: C.bg, borderLeft: `1px solid ${C.border}` }}>AUTO — MASUK</th>
+                <th colSpan={3} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.blue, textTransform: "uppercase", borderBottom: `1px solid ${C.border}`, textAlign: "center", background: C.bg, borderLeft: `1px solid ${C.border}` }}>MANUAL — KD</th>
+                <th colSpan={5} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.amber, textTransform: "uppercase", borderBottom: `1px solid ${C.border}`, textAlign: "center", background: C.bg, borderLeft: `1px solid ${C.border}` }}>MANUAL — STOK</th>
+                <th colSpan={1} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.green, textTransform: "uppercase", borderBottom: `1px solid ${C.border}`, textAlign: "center", background: C.bg, borderLeft: `1px solid ${C.border}` }}>NET BJ</th>
+                <th style={{ ...S.th, borderBottom: `1px solid ${C.border}` }} rowSpan={2}></th>
+              </tr>
+              <tr style={{ background: C.bg }}>
+                <th style={thS(C.green, true)}>{t.stock.table.inRST}</th><th style={thS(C.green)}>{t.stock.table.inGesek}</th><th style={{ ...thS(C.green), fontWeight: 900 }}>{t.stock.table.totalIn}</th>
+                <th style={thS(C.blue, true)}>{t.stock.table.kdPIK}</th><th style={thS(C.blue)}>{t.stock.table.kdLuar}</th><th style={{ ...thS(C.blue), fontWeight: 900 }}>{t.stock.table.kdTotal}</th>
+                <th style={thS(C.amber, true)}>{t.stock.table.rstKering}</th><th style={thS(C.red)}>{t.stock.table.prodInput}</th><th style={thS(C.primary)}>{t.stock.table.prodOutput}</th><th style={thS(C.textSub)}>{t.stock.table.wip}</th><th style={thS(C.red)}>{t.stock.table.ekspor}</th>
+                <th style={{ ...thS(C.green, true), fontWeight: 900 }}>{t.stock.table.netBJ}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {monthRecords.map(r => {
+                if (r.isOpname) return (
+                  <tr key={r.id} style={{ background: "#F3EEF9" }}>
+                    <td style={{ ...S.td, fontWeight: 700 }}><div>{r.date}</div><div style={{ fontSize: 11, fontWeight: 800, color: C.purple, marginTop: 2 }}>{t.stock.opname.label}</div></td>
+                    <td colSpan={11} style={{ ...S.td, borderLeft: `1px solid ${C.border}` }}>
+                      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                        {r.corrections && Object.entries(r.corrections).map(([key, val]) => (
+                          <div key={key} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: C.textSub, textTransform: "uppercase" }}>{key.replace("bj", "Net BJ").replace("rstKering", "RST Kering").replace("kdPIK", "KD PIK").replace("kdLuar", "KD LUAR")}</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: C.primary }}>{f2(val.actual)} m³</div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: +val.variance >= 0 ? C.green : C.red }}>{+val.variance >= 0 ? "+" : ""}{f2(val.variance)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td style={{ ...S.td, fontWeight: 900, fontSize: 14, color: C.purple, borderLeft: `1px solid ${C.border}` }}>{f2(r.netBJ)}</td>
+                    <td style={S.td}><button style={S.btnSm(C.red)} onClick={() => onDelete(r.id)}>✕</button></td>
+                  </tr>
+                );
+                return (
+                  <tr key={r.id} onMouseEnter={e => e.currentTarget.style.background = "#FAFAF8"} onMouseLeave={e => e.currentTarget.style.background = ""}>
+                    <td style={{ ...S.td, fontWeight: 700 }}>{r.date}</td>
+                    <td style={{ ...S.td, color: C.green, borderLeft: `1px solid ${C.border}` }}>{f2(r.incomingRST)}</td>
+                    <td style={{ ...S.td, color: C.green }}>{f2(r.incomingGesek)}</td>
+                    <td style={{ ...S.td, color: C.green, fontWeight: 700 }}>{f2(r.totalIncoming)}</td>
+                    <td style={{ ...S.td, borderLeft: `1px solid ${C.border}` }}>{f2(r.kdPIK)}</td>
+                    <td style={S.td}>{f2(r.kdLuar)}</td>
+                    <td style={{ ...S.td, fontWeight: 700, color: C.blue }}>{f2(r.kdTotal)}</td>
+                    <td style={{ ...S.td, borderLeft: `1px solid ${C.border}` }}>{f2(r.rstKering)}</td>
+                    <td style={{ ...S.td, color: C.red }}>{f2(r.prodInput)}</td>
+                    <td style={{ ...S.td, color: C.primary, fontWeight: 700 }}>{f2(r.prodOutput)}</td>
+                    <td style={S.td}>{f2(r.wip)}</td>
+                    <td style={{ ...S.td, color: C.red }}>{r.ekspor > 0 ? f2(r.ekspor) : <span style={{ color: C.textLight }}>—</span>}</td>
+                    <td style={{ ...S.td, fontWeight: 900, fontSize: 14, color: C.green, borderLeft: `1px solid ${C.border}` }}>{f2(r.netBJ)}</td>
+                    <td style={S.td}>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button style={S.btnSm(C.primary)} onClick={() => setEditing(r)}>{t.common.update}</button>
+                        <button style={S.btnSm(C.red)} onClick={() => onDelete(r.id)}>✕</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {showOpening && <OpeningStockModal t={t} onClose={() => setShowOpening(false)} onSave={onSaveOpening} />}
+      {showOpname && <StockOpnameModal t={t} lang={lang} prevRecord={records[0] || null} onClose={() => setShowOpname(false)} onSave={onSave} />}
+      {showAdd && <Modal title={t.stock.addBtn} onClose={() => setShowAdd(false)}><StockEntryForm t={t} deliveries={deliveries} production={production} prevBJ={prevBJForNew} onClose={() => setShowAdd(false)} onSave={onSave} saving={saving} /></Modal>}
+      {editing && <Modal title={t.common.update} onClose={() => setEditing(null)}><StockEntryForm t={t} deliveries={deliveries} production={production} prevBJ={prevBJForEdit(editing)} onClose={() => setEditing(null)} onSave={onSave} initial={editing} saving={saving} /></Modal>}
+    </div>
+  );
+}
+
 // ─── MAIN APP ──────────────────────────────────────────────────────────────
 export default function App() {
   const [lang, setLang] = useState("id");
   const [activeTab, setActiveTab] = useState("rawmat");
   const t = T[lang];
-  const tabs = [{ key: "rawmat", label: t.nav.rawmat, icon: "🪵" }, { key: "production", label: t.nav.production, icon: "⚙️" }];
+  const tabs = [{ key: "rawmat", label: t.nav.rawmat, icon: "🪵" }, { key: "production", label: t.nav.production, icon: "⚙️" }, { key: "stock", label: t.nav.stock, icon: "📦" }];
 
   return (
     <div style={{ background: C.bg, minHeight: "100vh", fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif' }}>
@@ -921,6 +1314,7 @@ export default function App() {
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 16px 48px" }}>
         {activeTab === "rawmat" && <RawmatModule t={t} lang={lang} />}
         {activeTab === "production" && <ProductionModule t={t} lang={lang} />}
+        {activeTab === "stock" && <StockModule t={t} lang={lang} />}
       </div>
     </div>
   );
