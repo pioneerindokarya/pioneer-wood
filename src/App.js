@@ -1199,12 +1199,12 @@ function StockModule({ t, lang }) {
   const thS = (color, bl = false) => ({ ...S.th, color, fontWeight: 700, borderLeft: bl ? `1px solid ${C.border}` : "none" });
 
   const summaryCards = [
-    { label: t.stock.summary.rstKering, val: latest ? f2(latest.rstKering) : (openingBJ ? f2(openingBJ.rstKering) : "—"), unit: "m³", sub: latest?.date, accent: C.amber },
-    { label: t.stock.summary.kdTotal, val: latest ? f2(latest.kdTotal) : (openingBJ ? f2((openingBJ.kdPIK||0)+(openingBJ.kdLuar||0)) : "—"), unit: "m³", sub: latest?.date, accent: C.blue },
-    { label: t.stock.summary.wip, val: latest ? f2(latest.wip) : (openingBJ ? f2(openingBJ.wip) : "—"), unit: "m³", sub: latest?.date, accent: "#7B68EE" },
-    { label: t.stock.summary.netBJ, val: latest ? f2(latest.netBJ) : (openingBJ ? f2(openingBJ.bj) : "—"), unit: "m³", sub: latest?.date, accent: C.green },
-    { label: t.stock.summary.lastIncoming, val: latest ? f2(latest.totalIncoming) : "—", unit: "m³", sub: latest?.date, accent: C.primary },
-    { label: t.stock.summary.lastProdOutput, val: latest ? f2(latest.prodOutput) : "—", unit: "m³", sub: latest?.date, accent: C.red },
+    { label: t.stock.summary.rstKering, val: latest ? f4(latest.rstKering) : (openingBJ ? f4(openingBJ.rstKering) : "—"), unit: "m³", sub: latest?.date, accent: C.amber },
+    { label: t.stock.summary.kdTotal, val: latest ? f4(latest.kdTotal) : (openingBJ ? f4((openingBJ.kdPIK||0)+(openingBJ.kdLuar||0)) : "—"), unit: "m³", sub: latest?.date, accent: C.blue },
+    { label: t.stock.summary.wip, val: latest ? f4(latest.wip) : (openingBJ ? f4(openingBJ.wip) : "—"), unit: "m³", sub: latest?.date, accent: "#7B68EE" },
+    { label: t.stock.summary.netBJ, val: latest ? f4(latest.netBJ) : (openingBJ ? f4(openingBJ.bj) : "—"), unit: "m³", sub: latest?.date, accent: C.green },
+    { label: t.stock.summary.lastIncoming, val: latest ? f4(latest.totalIncoming) : "—", unit: "m³", sub: latest?.date, accent: C.primary },
+    { label: t.stock.summary.lastProdOutput, val: latest ? f4(latest.prodOutput) : "—", unit: "m³", sub: latest?.date, accent: C.red },
   ];
 
   return (
