@@ -54,10 +54,10 @@ const T = {
       appName: "Stok Harian", addBtn: "+ Tambah Entry Stok", updateBtn: "Update",
       opening: { btn: "Set Stok Awal", title: "Stok Awal", bjLabel: "Barang Jadi Awal (m³)", hint: "Input sekali saat pertama kali menggunakan sistem", notSet: "Stok awal belum diset", notSetHint: "Set stok awal sebelum memulai" },
       auto: { label: "⚡ Otomatis dari modul lain", incomingRST: "Masuk RST", incomingGesek: "Masuk LOG Gesek", totalIncoming: "Total Masuk", prodInput: "Input Produksi", prodOutput: "Output Produksi", prevBJ: "Barang Jadi Kemarin" },
-      manual: { label: "✏️ Input Manual", kdPIK: "KD PIK (m³)", kdLuar: "KD LUAR (m³)", rstKering: "RST KERING (m³)", wip: "WIP (m³)", ekspor: "EKSPOR KELUAR (m³)", eksporHint: "Kosongkan jika tidak ada ekspor hari ini" },
-      calc: { kdTotal: "Total KD", bj: "BARANG JADI", netBJ: "Net Barang Jadi" },
+      manual: { label: "✏️ Input Manual", kdPIK: "KD PIK (m³)", kdLuar: "KD LUAR (m³)", inputStokKering: "Input Stok Kering (m³)", inputStokKeringHint: "Berapa m³ yang keluar KD dan masuk area kering hari ini", wip: "WIP (m³)", ekspor: "EKSPOR KELUAR (m³)", eksporHint: "Kosongkan jika tidak ada ekspor hari ini" },
+      calc: { kdTotal: "Total KD", bj: "BARANG JADI", netBJ: "Net Barang Jadi", rstKering: "RST KERING (Auto)" },
       opname: { btn: "Koreksi Opname", title: "Koreksi Stock Opname", calculated: "Nilai Sistem", actual: "Nilai Aktual (Fisik)", variance: "Selisih", hint: "Kosongkan field yang tidak dikoreksi — akan mengikuti nilai sistem", label: "⚖️ OPNAME" },
-      table: { date: "Tanggal", inRST: "Masuk RST", inGesek: "Masuk Gesek", totalIn: "Total Masuk", kdPIK: "KD PIK", kdLuar: "KD LUAR", kdTotal: "Total KD", rstKering: "RST KERING", prodInput: "Input Prod", prodOutput: "Output Prod", wip: "WIP", ekspor: "EKSPOR", netBJ: "Net BJ" },
+      table: { date: "Tanggal", inRST: "Masuk RST", inGesek: "Masuk Gesek", totalIn: "Total Masuk", kdPIK: "KD PIK", kdLuar: "KD LUAR", kdTotal: "Total KD", inputStokKering: "Input Stok Kering", rstKering: "RST KERING", prodInput: "Input Prod", prodOutput: "Output Prod", wip: "WIP", ekspor: "EKSPOR", netBJ: "Net BJ" },
       summary: { rstKering: "RST KERING", kdTotal: "Total KD", wip: "WIP", netBJ: "Net Barang Jadi", lastIncoming: "Total Masuk", lastProdOutput: "Output Produksi" },
       noData: "Belum ada data stok",
     },
@@ -101,10 +101,10 @@ const T = {
       appName: "每日库存", addBtn: "+ 添加库存记录", updateBtn: "更新",
       opening: { btn: "设置期初库存", title: "期初库存", bjLabel: "期初成品库存 (m³)", hint: "首次使用时填写一次即可", notSet: "未设置期初库存", notSetHint: "请先设置期初库存" },
       auto: { label: "⚡ 自动从其他模块获取", incomingRST: "RST入库", incomingGesek: "锯切入库", totalIncoming: "总入库", prodInput: "生产投入", prodOutput: "生产产出", prevBJ: "昨日成品库存" },
-      manual: { label: "✏️ 手动输入", kdPIK: "内部窑干 (m³)", kdLuar: "外部窑干 (m³)", rstKering: "已干RST (m³)", wip: "在制品 (m³)", ekspor: "出口扣减 (m³)", eksporHint: "当日无出口则留空" },
-      calc: { kdTotal: "窑干合计", bj: "成品库存", netBJ: "净成品库存" },
+      manual: { label: "✏️ 手动输入", kdPIK: "内部窑干 (m³)", kdLuar: "外部窑干 (m³)", inputStokKering: "入库干料 (m³)", inputStokKeringHint: "今日从窑干转入干料区的方量", wip: "在制品 (m³)", ekspor: "出口扣减 (m³)", eksporHint: "当日无出口则留空" },
+      calc: { kdTotal: "窑干合计", bj: "成品库存", netBJ: "净成品库存", rstKering: "已干RST (自动)" },
       opname: { btn: "盘点修正", title: "库存盘点修正", calculated: "系统值", actual: "实际盘点值", variance: "差异", hint: "留空字段将保留系统值", label: "⚖️ 盘点" },
-      table: { date: "日期", inRST: "RST入库", inGesek: "锯切入库", totalIn: "总入库", kdPIK: "内部窑干", kdLuar: "外部窑干", kdTotal: "窑干合计", rstKering: "已干RST", prodInput: "生产投入", prodOutput: "生产产出", wip: "在制品", ekspor: "出口", netBJ: "净成品" },
+      table: { date: "日期", inRST: "RST入库", inGesek: "锯切入库", totalIn: "总入库", kdPIK: "内部窑干", kdLuar: "外部窑干", kdTotal: "窑干合计", inputStokKering: "入库干料", rstKering: "已干RST", prodInput: "生产投入", prodOutput: "生产产出", wip: "在制品", ekspor: "出口", netBJ: "净成品" },
       summary: { rstKering: "已干RST", kdTotal: "窑干合计", wip: "在制品", netBJ: "净成品库存", lastIncoming: "总入库", lastProdOutput: "生产产出" },
       noData: "暂无库存数据",
     },
@@ -168,6 +168,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 const today = () => new Date().toISOString().split("T")[0];
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 const f2 = (n, dec = 2) => (n != null && n !== "" && !isNaN(n)) ? Number(n).toFixed(dec) : "—";
+const f4 = (n) => f2(n, 4);
 const toNum = (v) => (v !== "" && v != null && !isNaN(v)) ? +v : null;
 
 function getRawmatStatus(r) {
@@ -850,8 +851,8 @@ function ProductionModule({ t, lang }) {
       <MonthBar selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} onExport={() => setShowExport(true)} t={t} lang={lang} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 24 }}>
         {[
-          { label: t.production.summary.totalInput, val: `${f2(totalInput)} m³`, accent: C.blue },
-          { label: t.production.summary.totalOutput, val: `${f2(totalOutput)} m³`, sub: `${totalBlok} blok`, accent: C.green },
+          { label: t.production.summary.totalInput, val: `${f4(totalInput)} m³`, accent: C.blue },
+          { label: t.production.summary.totalOutput, val: `${f4(totalOutput)} m³`, sub: `${totalBlok} blok`, accent: C.green },
           { label: t.production.summary.avgYield, val: avgYield ? `${avgYield}%` : "—", sub: avgPlanerYield ? `Planer: ${avgPlanerYield}%` : null, accent: avgYield && +avgYield >= 40 ? C.green : C.red },
           { label: t.production.summary.avgM3Jam, val: avgM3 || "—", accent: C.amber },
           { label: t.production.summary.avgGluem3, val: avgGlue ? `${avgGlue} kg` : "—", accent: C.purple },
@@ -882,16 +883,16 @@ function ProductionModule({ t, lang }) {
                   <td style={S.td}>{r.date}</td>
                   <td style={S.td}><span style={S.badge("blue")}>S{r.shift}</span>{r.jamKerja && <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>{r.jamKerja} jam</div>}</td>
                   <td style={S.td}>
-                    <div style={{ fontWeight: 700 }}>{f2(totalRST)}</div>
-                    <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>L1: {f2(r.inputRSTLine1)} · L2: {f2(r.inputRSTLine2)}</div>
+                    <div style={{ fontWeight: 700 }}>{f4(totalRST)}</div>
+                    <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>L1: {f4(r.inputRSTLine1)} · L2: {f4(r.inputRSTLine2)}</div>
                   </td>
                   <td style={S.td}>
-                    <div style={{ fontWeight: 700 }}>{f2(totalPlaner)}</div>
-                    <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>L1: {f2(r.outputPlanerLine1)} · L2: {f2(r.outputPlanerLine2)}</div>
+                    <div style={{ fontWeight: 700 }}>{f4(totalPlaner)}</div>
+                    <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>L1: {f4(r.outputPlanerLine1)} · L2: {f4(r.outputPlanerLine2)}</div>
                   </td>
-                  <td style={S.td}>{r.outputPit ? f2(r.outputPit) : <span style={{ color: C.textLight }}>—</span>}</td>
-                  <td style={{ ...S.td, fontWeight: 700 }}><div>{f2(r.outputBlok)} m³</div>{r.jumlahBlok && <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>{r.jumlahBlok} blok</div>}</td>
-                  <td style={S.td}>{f2(r.rejectedM3)}</td>
+                  <td style={S.td}>{r.outputPit ? f4(r.outputPit) : <span style={{ color: C.textLight }}>—</span>}</td>
+                  <td style={{ ...S.td, fontWeight: 700 }}><div>{f4(r.outputBlok)} m³</div>{r.jumlahBlok && <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>{r.jumlahBlok} blok</div>}</td>
+                  <td style={S.td}>{f4(r.rejectedM3)}</td>
                   <td style={S.td}>{f2(r.glueKg)}</td>
                   <td style={{ ...S.td, fontWeight: 700, color: r.overallYield ? (+r.overallYield >= 40 ? C.green : C.red) : C.textLight }}>{r.overallYield ? `${r.overallYield}%` : "—"}</td>
                   <td style={{ ...S.td, color: C.blue }}>{r.planerYield ? `${r.planerYield}%` : "—"}</td>
@@ -920,6 +921,7 @@ function toDbStock(r) {
     incoming_rst: r.incomingRST || 0, incoming_gesek: r.incomingGesek || 0, total_incoming: r.totalIncoming || 0,
     prod_input: r.prodInput || 0, prod_output: r.prodOutput || 0,
     kd_pik: r.kdPIK || 0, kd_luar: r.kdLuar || 0, kd_total: r.kdTotal || 0,
+    input_stok_kering: r.inputStokKering || 0,
     rst_kering: r.rstKering || 0, wip: r.wip || 0, ekspor: r.ekspor || 0,
     bj: r.bj || 0, net_bj: r.netBJ || 0, prev_bj: r.prevBJ || 0,
     corrections: r.corrections || null,
@@ -931,6 +933,7 @@ function fromDbStock(r) {
     incomingRST: r.incoming_rst, incomingGesek: r.incoming_gesek, totalIncoming: r.total_incoming,
     prodInput: r.prod_input, prodOutput: r.prod_output,
     kdPIK: r.kd_pik, kdLuar: r.kd_luar, kdTotal: r.kd_total,
+    inputStokKering: r.input_stok_kering,
     rstKering: r.rst_kering, wip: r.wip, ekspor: r.ekspor,
     bj: r.bj, netBJ: r.net_bj, prevBJ: r.prev_bj,
     corrections: r.corrections,
@@ -1053,28 +1056,31 @@ function StockOpnameModal({ t, prevRecord, onClose, onSave, lang }) {
   );
 }
 
-function StockEntryForm({ t, deliveries, production, prevBJ, onClose, onSave, initial, saving }) {
+function StockEntryForm({ t, deliveries, production, prevBJ, prevRstKering, onClose, onSave, initial, saving }) {
   const [date, setDate] = useState(initial?.date || today());
-  const [form, setForm] = useState({ kdPIK: initial?.kdPIK ?? "", kdLuar: initial?.kdLuar ?? "", rstKering: initial?.rstKering ?? "", wip: initial?.wip ?? "", ekspor: initial?.ekspor ?? "" });
+  const [form, setForm] = useState({ kdPIK: initial?.kdPIK ?? "", kdLuar: initial?.kdLuar ?? "", inputStokKering: initial?.inputStokKering ?? "", wip: initial?.wip ?? "", ekspor: initial?.ekspor ?? "" });
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const [autoData, setAutoData] = useState({ incomingRST: 0, incomingGesek: 0, totalIncoming: 0, prodInput: 0, prodOutput: 0 });
   useEffect(() => {
     setAutoData({ ...calcStockIncoming(deliveries, date), ...calcStockProduction(production, date) });
   }, [date, deliveries, production]);
   const kdTotal = (toNum(form.kdPIK) || 0) + (toNum(form.kdLuar) || 0);
+  const inputStokKering = toNum(form.inputStokKering) || 0;
+  const rstKering = (prevRstKering || 0) + inputStokKering - autoData.prodInput;
   const eksporVal = toNum(form.ekspor) || 0;
   const bj = (prevBJ || 0) + autoData.prodOutput;
   const netBJ = bj - eksporVal;
-  const valid = form.rstKering !== "" || form.kdPIK !== "";
+  const valid = form.kdPIK !== "" || form.inputStokKering !== "";
   const handleSave = () => {
     if (!valid) return;
-    onSave({ id: initial?.id || uid(), date, incomingRST: autoData.incomingRST, incomingGesek: autoData.incomingGesek, totalIncoming: autoData.totalIncoming, prodInput: autoData.prodInput, prodOutput: autoData.prodOutput, kdPIK: toNum(form.kdPIK) || 0, kdLuar: toNum(form.kdLuar) || 0, kdTotal, rstKering: toNum(form.rstKering) || 0, wip: toNum(form.wip) || 0, ekspor: eksporVal, bj, netBJ, prevBJ: prevBJ || 0 });
+    onSave({ id: initial?.id || uid(), date, incomingRST: autoData.incomingRST, incomingGesek: autoData.incomingGesek, totalIncoming: autoData.totalIncoming, prodInput: autoData.prodInput, prodOutput: autoData.prodOutput, kdPIK: toNum(form.kdPIK) || 0, kdLuar: toNum(form.kdLuar) || 0, kdTotal, inputStokKering, rstKering, wip: toNum(form.wip) || 0, ekspor: eksporVal, bj, netBJ, prevBJ: prevBJ || 0, prevRstKering: prevRstKering || 0 });
   };
   const inp = { width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, color: C.text, background: "#fff", boxSizing: "border-box" };
   const lbl = { fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 5 };
   return (
     <>
       <div style={{ marginBottom: 14 }}><label style={lbl}>{t.common.date}</label><input type="date" style={inp} value={date} onChange={e => setDate(e.target.value)} /></div>
+      {/* Auto section */}
       <div style={{ background: C.greenLight, border: `1px solid ${C.green}30`, borderRadius: 10, padding: "14px 16px", marginBottom: 20 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: C.green, marginBottom: 10 }}>{t.stock.auto.label}</div>
         <StockAutoBox label={t.stock.auto.incomingRST} value={autoData.incomingRST} />
@@ -1086,24 +1092,37 @@ function StockEntryForm({ t, deliveries, production, prevBJ, onClose, onSave, in
         <div style={{ height: 8 }} />
         <StockAutoBox label={t.stock.auto.prevBJ} value={prevBJ || 0} />
       </div>
+      {/* Manual section */}
       <div style={{ fontSize: 12, fontWeight: 700, color: C.textSub, marginBottom: 12 }}>{t.stock.manual.label}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.kdPIK}</label><input type="number" step="0.01" style={inp} value={form.kdPIK} onChange={e => upd("kdPIK", e.target.value)} /></div>
-        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.kdLuar}</label><input type="number" step="0.01" style={inp} value={form.kdLuar} onChange={e => upd("kdLuar", e.target.value)} /></div>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.kdPIK}</label><input type="number" step="0.0001" style={inp} value={form.kdPIK} onChange={e => upd("kdPIK", e.target.value)} /></div>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.kdLuar}</label><input type="number" step="0.0001" style={inp} value={form.kdLuar} onChange={e => upd("kdLuar", e.target.value)} /></div>
       </div>
-      {(form.kdPIK || form.kdLuar) && <div style={{ background: C.blueLight, borderRadius: 8, padding: "8px 14px", marginBottom: 14, display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 12, color: C.blue, fontWeight: 700 }}>{t.stock.calc.kdTotal}</span><span style={{ fontSize: 16, fontWeight: 800, color: C.primary }}>{f2(kdTotal)} m³</span></div>}
+      {(form.kdPIK || form.kdLuar) && <div style={{ background: C.blueLight, borderRadius: 8, padding: "8px 14px", marginBottom: 14, display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 12, color: C.blue, fontWeight: 700 }}>{t.stock.calc.kdTotal}</span><span style={{ fontSize: 16, fontWeight: 800, color: C.primary }}>{f4(kdTotal)} m³</span></div>}
+      <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.inputStokKering}</label><input type="number" step="0.0001" style={inp} value={form.inputStokKering} onChange={e => upd("inputStokKering", e.target.value)} /><div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>{t.stock.manual.inputStokKeringHint}</div></div>
+      {/* RST Kering auto preview */}
+      <div style={{ background: C.amberLight, border: `1px solid ${C.amber}30`, borderRadius: 8, padding: "10px 14px", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.amber, textTransform: "uppercase", marginBottom: 6 }}>{t.stock.calc.rstKering}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.textSub, marginBottom: 3 }}>
+          <span>RST Kering kemarin + Input Stok Kering − Input Produksi</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 12, color: C.textSub }}>{f4(prevRstKering || 0)} + {f4(inputStokKering)} − {f4(autoData.prodInput)}</span>
+          <span style={{ fontSize: 18, fontWeight: 800, color: C.amber }}>{f4(rstKering)} m³</span>
+        </div>
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.rstKering}</label><input type="number" step="0.01" style={inp} value={form.rstKering} onChange={e => upd("rstKering", e.target.value)} /></div>
-        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.wip}</label><input type="number" step="0.01" style={inp} value={form.wip} onChange={e => upd("wip", e.target.value)} /></div>
-        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.ekspor}</label><input type="number" step="0.01" style={inp} value={form.ekspor} onChange={e => upd("ekspor", e.target.value)} /><div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>{t.stock.manual.eksporHint}</div></div>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.wip}</label><input type="number" step="0.0001" style={inp} value={form.wip} onChange={e => upd("wip", e.target.value)} /></div>
+        <div style={{ marginBottom: 14 }}><label style={lbl}>{t.stock.manual.ekspor}</label><input type="number" step="0.0001" style={inp} value={form.ekspor} onChange={e => upd("ekspor", e.target.value)} /><div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>{t.stock.manual.eksporHint}</div></div>
       </div>
+      {/* BJ auto preview */}
       <div style={{ background: C.primary, borderRadius: 10, padding: "14px 16px", marginBottom: 14 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", marginBottom: 8 }}>{t.stock.calc.bj}</div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{t.stock.auto.prevBJ} + {t.stock.auto.prodOutput}</span><span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{f2(prevBJ || 0)} + {f2(autoData.prodOutput)} = {f2(bj)} m³</span></div>
-        {eksporVal > 0 && <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>− Ekspor</span><span style={{ fontSize: 13, fontWeight: 700, color: C.amberLight }}>− {f2(eksporVal)} m³</span></div>}
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{t.stock.auto.prevBJ} + {t.stock.auto.prodOutput}</span><span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{f4(prevBJ || 0)} + {f4(autoData.prodOutput)} = {f4(bj)} m³</span></div>
+        {eksporVal > 0 && <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>− Ekspor</span><span style={{ fontSize: 13, fontWeight: 700, color: C.amberLight }}>− {f4(eksporVal)} m³</span></div>}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.2)", paddingTop: 8, display: "flex", justifyContent: "space-between" }}>
           <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{t.stock.calc.netBJ}</span>
-          <span style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>{f2(netBJ)} m³</span>
+          <span style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>{f4(netBJ)} m³</span>
         </div>
       </div>
       <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
@@ -1173,6 +1192,8 @@ function StockModule({ t, lang }) {
 
   const prevBJForNew = records.length > 0 ? records[0].netBJ : (openingBJ?.bj || 0);
   const prevBJForEdit = (r) => { const idx = records.findIndex(x => x.id === r.id); return idx < records.length - 1 ? records[idx + 1].netBJ : (openingBJ?.bj || 0); };
+  const prevRstForNew = records.length > 0 ? records[0].rstKering : (openingBJ?.rstKering || 0);
+  const prevRstForEdit = (r) => { const idx = records.findIndex(x => x.id === r.id); return idx < records.length - 1 ? records[idx + 1].rstKering : (openingBJ?.rstKering || 0); };
   const monthRecords = selectedMonth === "all" ? records : records.filter(r => r.date && r.date.startsWith(selectedMonth));
   const latest = monthRecords[0] || null;
   const thS = (color, bl = false) => ({ ...S.th, color, fontWeight: 700, borderLeft: bl ? `1px solid ${C.border}` : "none" });
@@ -1227,14 +1248,13 @@ function StockModule({ t, lang }) {
                 <th style={{ ...S.th, borderBottom: `1px solid ${C.border}` }} rowSpan={2}>{t.common.date}</th>
                 <th colSpan={3} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.green, textTransform: "uppercase", borderBottom: `1px solid ${C.border}`, textAlign: "center", background: C.bg, borderLeft: `1px solid ${C.border}` }}>AUTO — MASUK</th>
                 <th colSpan={3} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.blue, textTransform: "uppercase", borderBottom: `1px solid ${C.border}`, textAlign: "center", background: C.bg, borderLeft: `1px solid ${C.border}` }}>MANUAL — KD</th>
-                <th colSpan={5} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.amber, textTransform: "uppercase", borderBottom: `1px solid ${C.border}`, textAlign: "center", background: C.bg, borderLeft: `1px solid ${C.border}` }}>MANUAL — STOK</th>
-                <th colSpan={1} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.green, textTransform: "uppercase", borderBottom: `1px solid ${C.border}`, textAlign: "center", background: C.bg, borderLeft: `1px solid ${C.border}` }}>NET BJ</th>
+                <th colSpan={6} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.amber, textTransform: "uppercase", borderBottom: `1px solid ${C.border}`, textAlign: "center", background: C.bg, borderLeft: `1px solid ${C.border}` }}>MANUAL — STOK</th>                <th colSpan={1} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, color: C.green, textTransform: "uppercase", borderBottom: `1px solid ${C.border}`, textAlign: "center", background: C.bg, borderLeft: `1px solid ${C.border}` }}>NET BJ</th>
                 <th style={{ ...S.th, borderBottom: `1px solid ${C.border}` }} rowSpan={2}></th>
               </tr>
               <tr style={{ background: C.bg }}>
                 <th style={thS(C.green, true)}>{t.stock.table.inRST}</th><th style={thS(C.green)}>{t.stock.table.inGesek}</th><th style={{ ...thS(C.green), fontWeight: 900 }}>{t.stock.table.totalIn}</th>
                 <th style={thS(C.blue, true)}>{t.stock.table.kdPIK}</th><th style={thS(C.blue)}>{t.stock.table.kdLuar}</th><th style={{ ...thS(C.blue), fontWeight: 900 }}>{t.stock.table.kdTotal}</th>
-                <th style={thS(C.amber, true)}>{t.stock.table.rstKering}</th><th style={thS(C.red)}>{t.stock.table.prodInput}</th><th style={thS(C.primary)}>{t.stock.table.prodOutput}</th><th style={thS(C.textSub)}>{t.stock.table.wip}</th><th style={thS(C.red)}>{t.stock.table.ekspor}</th>
+                <th style={thS(C.amber, true)}>{t.stock.table.inputStokKering}</th><th style={{ ...thS(C.amber), fontWeight: 900 }}>{t.stock.table.rstKering}</th><th style={thS(C.red)}>{t.stock.table.prodInput}</th><th style={thS(C.primary)}>{t.stock.table.prodOutput}</th><th style={thS(C.textSub)}>{t.stock.table.wip}</th><th style={thS(C.red)}>{t.stock.table.ekspor}</th>
                 <th style={{ ...thS(C.green, true), fontWeight: 900 }}>{t.stock.table.netBJ}</th>
               </tr>
             </thead>
@@ -1261,18 +1281,19 @@ function StockModule({ t, lang }) {
                 return (
                   <tr key={r.id} onMouseEnter={e => e.currentTarget.style.background = "#FAFAF8"} onMouseLeave={e => e.currentTarget.style.background = ""}>
                     <td style={{ ...S.td, fontWeight: 700 }}>{r.date}</td>
-                    <td style={{ ...S.td, color: C.green, borderLeft: `1px solid ${C.border}` }}>{f2(r.incomingRST)}</td>
-                    <td style={{ ...S.td, color: C.green }}>{f2(r.incomingGesek)}</td>
-                    <td style={{ ...S.td, color: C.green, fontWeight: 700 }}>{f2(r.totalIncoming)}</td>
-                    <td style={{ ...S.td, borderLeft: `1px solid ${C.border}` }}>{f2(r.kdPIK)}</td>
-                    <td style={S.td}>{f2(r.kdLuar)}</td>
-                    <td style={{ ...S.td, fontWeight: 700, color: C.blue }}>{f2(r.kdTotal)}</td>
-                    <td style={{ ...S.td, borderLeft: `1px solid ${C.border}` }}>{f2(r.rstKering)}</td>
-                    <td style={{ ...S.td, color: C.red }}>{f2(r.prodInput)}</td>
-                    <td style={{ ...S.td, color: C.primary, fontWeight: 700 }}>{f2(r.prodOutput)}</td>
-                    <td style={S.td}>{f2(r.wip)}</td>
-                    <td style={{ ...S.td, color: C.red }}>{r.ekspor > 0 ? f2(r.ekspor) : <span style={{ color: C.textLight }}>—</span>}</td>
-                    <td style={{ ...S.td, fontWeight: 900, fontSize: 14, color: C.green, borderLeft: `1px solid ${C.border}` }}>{f2(r.netBJ)}</td>
+                    <td style={{ ...S.td, color: C.green, borderLeft: `1px solid ${C.border}` }}>{f4(r.incomingRST)}</td>
+                    <td style={{ ...S.td, color: C.green }}>{f4(r.incomingGesek)}</td>
+                    <td style={{ ...S.td, color: C.green, fontWeight: 700 }}>{f4(r.totalIncoming)}</td>
+                    <td style={{ ...S.td, borderLeft: `1px solid ${C.border}` }}>{f4(r.kdPIK)}</td>
+                    <td style={S.td}>{f4(r.kdLuar)}</td>
+                    <td style={{ ...S.td, fontWeight: 700, color: C.blue }}>{f4(r.kdTotal)}</td>
+                    <td style={{ ...S.td, borderLeft: `1px solid ${C.border}` }}>{f4(r.inputStokKering)}</td>
+                    <td style={{ ...S.td, fontWeight: 700, color: C.amber }}>{f4(r.rstKering)}</td>
+                    <td style={{ ...S.td, color: C.red }}>{f4(r.prodInput)}</td>
+                    <td style={{ ...S.td, color: C.primary, fontWeight: 700 }}>{f4(r.prodOutput)}</td>
+                    <td style={S.td}>{f4(r.wip)}</td>
+                    <td style={{ ...S.td, color: C.red }}>{r.ekspor > 0 ? f4(r.ekspor) : <span style={{ color: C.textLight }}>—</span>}</td>
+                    <td style={{ ...S.td, fontWeight: 900, fontSize: 14, color: C.green, borderLeft: `1px solid ${C.border}` }}>{f4(r.netBJ)}</td>
                     <td style={S.td}>
                       <div style={{ display: "flex", gap: 6 }}>
                         <button style={S.btnSm(C.primary)} onClick={() => setEditing(r)}>{t.common.update}</button>
@@ -1288,8 +1309,8 @@ function StockModule({ t, lang }) {
       )}
       {showOpening && <OpeningStockModal t={t} onClose={() => setShowOpening(false)} onSave={onSaveOpening} initial={openingBJ} />}
       {showOpname && <StockOpnameModal t={t} lang={lang} prevRecord={records[0] || null} onClose={() => setShowOpname(false)} onSave={onSave} />}
-      {showAdd && <Modal title={t.stock.addBtn} onClose={() => setShowAdd(false)}><StockEntryForm t={t} deliveries={deliveries} production={production} prevBJ={prevBJForNew} onClose={() => setShowAdd(false)} onSave={onSave} saving={saving} /></Modal>}
-      {editing && <Modal title={t.common.update} onClose={() => setEditing(null)}><StockEntryForm t={t} deliveries={deliveries} production={production} prevBJ={prevBJForEdit(editing)} onClose={() => setEditing(null)} onSave={onSave} initial={editing} saving={saving} /></Modal>}
+      {showAdd && <Modal title={t.stock.addBtn} onClose={() => setShowAdd(false)}><StockEntryForm t={t} deliveries={deliveries} production={production} prevBJ={prevBJForNew} prevRstKering={prevRstForNew} onClose={() => setShowAdd(false)} onSave={onSave} saving={saving} /></Modal>}
+      {editing && <Modal title={t.common.update} onClose={() => setEditing(null)}><StockEntryForm t={t} deliveries={deliveries} production={production} prevBJ={prevBJForEdit(editing)} prevRstKering={prevRstForEdit(editing)} onClose={() => setEditing(null)} onSave={onSave} initial={editing} saving={saving} /></Modal>}
     </div>
   );
 }
@@ -1307,7 +1328,7 @@ export default function App() {
         <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", height: 54 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 5, height: 28, background: C.amber, borderRadius: 3 }} />
-            <span style={{ color: "#fff", fontWeight: 800, fontSize: 15 }}>Pioneer Wood System</span>
+            <span style={{ color: "#fff", fontWeight: 800, fontSize: 15 }}>PIK-OS</span>
           </div>
           <button onClick={() => setLang(l => l === "id" ? "cn" : "id")} style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>{t.langToggle}</button>
         </div>
