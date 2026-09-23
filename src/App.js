@@ -386,7 +386,7 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
   const handleSave = () => onSave({ ...record, date: record.date, tallyLogVol: toNum(form.tallyLogVol), tallyFinalVol: null, gesekVol: toNum(form.gesekVol), gesekDate: form.gesekDate || null, tallyVol: toNum(form.tallyVol), finalVol: null, notes: form.notes, rendemen: rendemen ? +rendemen : null, hargaPerM3: toNum(form.hargaPerM3) });
   const title = record.type === "LOG" ? t.rawmat.modalTitle.updateLog : t.rawmat.modalTitle.updateRST;
   return (
-    <Modal title={`${title} — ${record.supplier}`} onClose={onClose}>
+    <Modal title={`${title} — ${record.supplier}${record.nomorKiriman ? ` · No. ${record.nomorKiriman}` : ""}`} onClose={onClose}>
       <div style={{ background: C.bg, borderRadius: 10, padding: "14px 16px", marginBottom: 20 }}><StepProgress type={record.type} status={status} t={t} /></div>
       <InfoBox label={`📄 ${t.rawmat.fields.sjVol}`} value={`${f2(record.sjVol, 4)} m³`} bg="#F9F7F4" />
       {record.type === "LOG" ? (
