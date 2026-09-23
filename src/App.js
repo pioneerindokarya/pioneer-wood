@@ -187,8 +187,8 @@ function getRawmatStatus(r) {
   }
 }
 function getEffectiveFinal(r) {
-  if (r.type === "LOG") return r.tallyFinalVol ?? r.tallyLogVol ?? null;
-  return r.finalVol ?? r.tallyVol ?? null;
+  if (r.type === "LOG") return r.tallyLogVol ?? null;
+  return r.tallyVol ?? null;
 }
 function getTally(r) {
   return r.type === "LOG" ? r.tallyLogVol : r.tallyVol;
@@ -380,10 +380,10 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
   });
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const status = getRawmatStatus(record);
-  const effFinalLOG = toNum(form.tallyFinalVol) ?? toNum(form.tallyLogVol) ?? null;
-  const effFinalRST = toNum(form.finalVol) ?? toNum(form.tallyVol) ?? null;
+  const effFinalLOG = toNum(form.tallyLogVol) ?? null;
+  const effFinalRST = toNum(form.tallyVol) ?? null;
   const rendemen = (toNum(form.gesekVol) != null && effFinalLOG != null && effFinalLOG > 0) ? ((toNum(form.gesekVol) / effFinalLOG) * 100).toFixed(2) : null;
-  const handleSave = () => onSave({ ...record, date: record.date, tallyLogVol: toNum(form.tallyLogVol), tallyFinalVol: toNum(form.tallyFinalVol), gesekVol: toNum(form.gesekVol), gesekDate: form.gesekDate || null, tallyVol: toNum(form.tallyVol), finalVol: toNum(form.finalVol), notes: form.notes, rendemen: rendemen ? +rendemen : null, hargaPerM3: toNum(form.hargaPerM3) });
+  const handleSave = () => onSave({ ...record, date: record.date, tallyLogVol: toNum(form.tallyLogVol), tallyFinalVol: null, gesekVol: toNum(form.gesekVol), gesekDate: form.gesekDate || null, tallyVol: toNum(form.tallyVol), finalVol: null, notes: form.notes, rendemen: rendemen ? +rendemen : null, hargaPerM3: toNum(form.hargaPerM3) });
   const title = record.type === "LOG" ? t.rawmat.modalTitle.updateLog : t.rawmat.modalTitle.updateRST;
   return (
     <Modal title={`${title} — ${record.supplier}`} onClose={onClose}>
@@ -391,10 +391,8 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
       <InfoBox label={`📄 ${t.rawmat.fields.sjVol}`} value={`${f2(record.sjVol, 4)} m³`} bg="#F9F7F4" />
       {record.type === "LOG" ? (
         <>
-          <Field label={`${t.rawmat.fields.tallyLog} (m³)`}><input type="number" step="0.0001" style={S.input} value={form.tallyLogVol} onChange={e => upd("tallyLogVol", e.target.value)} /></Field>
+          <Field label="Tally (m³)"><input type="number" step="0.0001" style={S.input} value={form.tallyLogVol} onChange={e => upd("tallyLogVol", e.target.value)} /></Field>
           <DiffPill val={toNum(form.tallyLogVol)} base={record.sjVol} label={t.rawmat.fields.diffVsSJ} />
-          <Field label={`${t.rawmat.fields.tallyFinal} (m³)`} hint={t.rawmat.fields.tallyFinalHint}><input type="number" step="0.0001" style={S.input} value={form.tallyFinalVol} placeholder={form.tallyLogVol || ""} onChange={e => upd("tallyFinalVol", e.target.value)} /></Field>
-          {effFinalLOG != null && <InfoBox label={`✅ ${t.rawmat.fields.effectiveFinal}`} value={`${f2(effFinalLOG, 4)} m³`} sub={`${t.rawmat.fields.diffVsSJ}: ${(effFinalLOG - record.sjVol >= 0 ? "+" : "")}${f2(effFinalLOG - record.sjVol, 4)} m³`} color={C.green} bg={C.greenLight} />}
           <div style={{ height: 1, background: C.border, margin: "16px 0" }} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
             <Field label={`${t.rawmat.fields.gesek} (m³)`}><input type="number" step="0.0001" style={S.input} value={form.gesekVol} onChange={e => upd("gesekVol", e.target.value)} /></Field>
@@ -419,10 +417,8 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
         </>
       ) : (
         <>
-          <Field label={`${t.rawmat.fields.tallyRST} (m³)`}><input type="number" step="0.0001" style={S.input} value={form.tallyVol} onChange={e => upd("tallyVol", e.target.value)} /></Field>
+          <Field label="Tally (m³)"><input type="number" step="0.0001" style={S.input} value={form.tallyVol} onChange={e => upd("tallyVol", e.target.value)} /></Field>
           <DiffPill val={toNum(form.tallyVol)} base={record.sjVol} label={t.rawmat.fields.diffVsSJ} />
-          <Field label={`${t.rawmat.fields.finalRST} (m³)`} hint={t.rawmat.fields.finalRSTHint}><input type="number" step="0.0001" style={S.input} value={form.finalVol} placeholder={form.tallyVol || ""} onChange={e => upd("finalVol", e.target.value)} /></Field>
-          {effFinalRST != null && <InfoBox label={`✅ ${t.rawmat.fields.effectiveFinal}`} value={`${f2(effFinalRST, 4)} m³`} sub={`${t.rawmat.fields.diffVsSJ}: ${(effFinalRST - record.sjVol >= 0 ? "+" : "")}${f2(effFinalRST - record.sjVol, 4)} m³`} color={C.green} bg={C.greenLight} />}
           {effFinalRST != null && (
             <div style={{ background: C.blueLight, border: `1px solid ${C.blue}30`, borderRadius: 10, padding: "14px 16px", marginTop: 4 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: "uppercase", marginBottom: 8 }}>💰 Pembayaran RST</div>
