@@ -676,7 +676,7 @@ function RawmatModule({ t, lang }) {
       ) : (
         <div style={{ background: C.card, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
-            <thead><tr style={{ background: C.bg }}>{[t.common.date, t.rawmat.table.nomorKiriman, t.rawmat.table.supplier, t.rawmat.table.type, t.rawmat.table.sj, t.rawmat.table.tally, t.rawmat.table.final, t.rawmat.table.gesek, t.rawmat.table.rendemen, "💰 Harga/m³", t.rawmat.table.status, ""].map((h, i) => <th key={i} style={S.th}>{h}</th>)}</tr></thead>
+            <thead><tr style={{ background: C.bg }}>{[t.common.date, t.rawmat.table.nomorKiriman, t.rawmat.table.supplier, t.rawmat.table.type, t.rawmat.table.sj, "Tally (m³)", t.rawmat.table.gesek, t.rawmat.table.rendemen, "💰 Harga/m³", "💰 Total Nilai", t.rawmat.table.status, ""].map((h, i) => <th key={i} style={S.th}>{h}</th>)}</tr></thead>
             <tbody>
               {filtered.map(r => {
                 const effFinal = getEffectiveFinal(r), tally = getTally(r), status = getRawmatStatus(r);
@@ -687,11 +687,13 @@ function RawmatModule({ t, lang }) {
                     <td style={{ ...S.td, fontWeight: 600 }}>{r.supplier}</td>
                     <td style={S.td}><span style={S.badge(r.type === "LOG" ? "amber" : "blue")}>{r.type}</span></td>
                     <td style={S.td}>{f2(r.sjVol, 4)}</td>
-                    <td style={S.td}>{tally != null ? f2(tally, 4) : <span style={{ color: C.textLight }}>—</span>}</td>
-                    <td style={{ ...S.td, fontWeight: 700 }}>{effFinal != null ? f2(effFinal, 4) : <span style={{ color: C.textLight }}>—</span>}</td>
+                    <td style={{ ...S.td, fontWeight: 700 }}>
+                      {effFinal != null ? f2(effFinal, 4) : <span style={{ color: C.textLight }}>—</span>}
+                    </td>
                     <td style={S.td}>{r.type === "LOG" ? (r.gesekVol != null ? <div><div>{f2(r.gesekVol, 4)}</div>{r.gesekDate && <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{r.gesekDate}</div>}</div> : <span style={{ color: C.textLight }}>—</span>) : <span style={{ color: C.textLight }}>N/A</span>}</td>
                     <td style={S.td}>{r.type === "LOG" && r.rendemen != null ? <span style={{ fontWeight: 700, color: r.rendemen >= 60 ? C.green : r.rendemen >= 50 ? C.amber : C.red }}>{Number(r.rendemen).toFixed(2)}%</span> : <span style={{ color: C.textLight }}>—</span>}</td>
                     <td style={S.td}><BlurPrice value={r.hargaPerM3 ? fRp(r.hargaPerM3) : null} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></td>
+                    <td style={S.td}><BlurPrice value={r.hargaPerM3 && effFinal ? fRp(r.hargaPerM3 * effFinal) : null} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></td>
                     <td style={S.td}><span style={S.badge(statusBadgeColor(r))}>{t.rawmat.status[status]}</span></td>
                     <td style={S.td}><div style={{ display: "flex", gap: 6 }}><button style={S.btnSm(C.primary)} onClick={() => setEditing(r)}>{t.common.update}</button><button style={S.btnSm(C.red)} onClick={() => onDelete(r.id)}>✕</button></div></td>
                   </tr>
