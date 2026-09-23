@@ -120,6 +120,7 @@ function toDbRawmat(r) {
     gesek_vol: r.gesekVol || null, gesek_date: r.gesekDate || null,
     tally_vol: r.tallyVol || null, final_vol: r.finalVol || null,
     rendemen: r.rendemen || null, notes: r.notes || null,
+    harga_per_m3: r.hargaPerM3 || null,
   };
 }
 function fromDbRawmat(r) {
@@ -130,6 +131,7 @@ function fromDbRawmat(r) {
     gesekVol: r.gesek_vol, gesekDate: r.gesek_date,
     tallyVol: r.tally_vol, finalVol: r.final_vol,
     rendemen: r.rendemen, notes: r.notes,
+    hargaPerM3: r.harga_per_m3,
   };
 }
 
@@ -169,6 +171,7 @@ const today = () => new Date().toISOString().split("T")[0];
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 const f2 = (n, dec = 2) => (n != null && n !== "" && !isNaN(n)) ? Number(n).toFixed(dec) : "—";
 const f4 = (n) => f2(n, 4);
+const fRp = (n) => (n != null && !isNaN(n)) ? "Rp " + Math.round(n).toLocaleString("id-ID") : "—";
 const toNum = (v) => (v !== "" && v != null && !isNaN(v)) ? +v : null;
 
 function getRawmatStatus(r) {
@@ -279,6 +282,42 @@ function ErrorBar({ error, onRetry }) {
   return <div style={{ background: C.redLight, border: `1px solid ${C.red}`, borderRadius: 8, padding: "12px 16px", marginBottom: 16, color: C.red, fontWeight: 600 }}>⚠️ {error} <button onClick={onRetry} style={{ marginLeft: 12, background: C.red, color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>Retry</button></div>;
 }
 
+// ─── PIN & PRICE COMPONENTS ────────────────────────────────────────────────
+const DEFAULT_PIN = "1234";
+
+function PINModal({ onClose, onSuccess }) {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState(false);
+  const handleSubmit = () => {
+    const stored = localStorage.getItem("pik-os-pin") || DEFAULT_PIN;
+    if (pin === stored) { onSuccess(); onClose(); }
+    else { setError(true); setPin(""); }
+  };
+  return (
+    <Modal title="🔒 Masukkan PIN" onClose={onClose}>
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 8 }}>PIN 4 Digit</label>
+        <input type="password" maxLength={4} style={{ ...S.input, fontSize: 24, letterSpacing: 12, textAlign: "center" }} value={pin} onChange={e => { setPin(e.target.value); setError(false); }} onKeyDown={e => e.key === "Enter" && handleSubmit()} autoFocus />
+        {error && <div style={{ color: C.red, fontSize: 12, fontWeight: 700, marginTop: 6, textAlign: "center" }}>PIN salah, coba lagi</div>}
+      </div>
+      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+        <button style={S.btnOut} onClick={onClose}>{T.id.common.cancel}</button>
+        <button style={S.btn(C.primary)} onClick={handleSubmit}>Buka 🔓</button>
+      </div>
+    </Modal>
+  );
+}
+
+function BlurPrice({ value, unlocked, onRequestUnlock }) {
+  if (!value || value === "—") return <span style={{ color: C.textLight }}>—</span>;
+  if (unlocked) return <span style={{ fontWeight: 700 }}>{value}</span>;
+  return (
+    <span onClick={onRequestUnlock} title="Klik untuk lihat harga" style={{ filter: "blur(5px)", cursor: "pointer", userSelect: "none", fontWeight: 700, color: C.primary }}>
+      {value}
+    </span>
+  );
+}
+
 // ─── RAW MATERIAL COMPONENTS ───────────────────────────────────────────────
 function StepProgress({ type, status, t }) {
   const steps = t.rawmat.steps[type];
@@ -331,13 +370,13 @@ function AddRawmatModal({ onClose, onSave, t, filterType, saving }) {
   );
 }
 function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
-  const [form, setForm] = useState({ tallyLogVol: record.tallyLogVol ?? "", tallyFinalVol: record.tallyFinalVol ?? "", gesekVol: record.gesekVol ?? "", gesekDate: record.gesekDate ?? "", tallyVol: record.tallyVol ?? "", finalVol: record.finalVol ?? "", notes: record.notes ?? "" });
+  const [form, setForm] = useState({ tallyLogVol: record.tallyLogVol ?? "", tallyFinalVol: record.tallyFinalVol ?? "", gesekVol: record.gesekVol ?? "", gesekDate: record.gesekDate ?? "", tallyVol: record.tallyVol ?? "", finalVol: record.finalVol ?? "", notes: record.notes ?? "", hargaPerM3: record.hargaPerM3 ?? "" });
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const status = getRawmatStatus(record);
   const effFinalLOG = toNum(form.tallyFinalVol) ?? toNum(form.tallyLogVol) ?? null;
   const effFinalRST = toNum(form.finalVol) ?? toNum(form.tallyVol) ?? null;
   const rendemen = (toNum(form.gesekVol) != null && effFinalLOG != null && effFinalLOG > 0) ? ((toNum(form.gesekVol) / effFinalLOG) * 100).toFixed(2) : null;
-  const handleSave = () => onSave({ ...record, date: record.date, tallyLogVol: toNum(form.tallyLogVol), tallyFinalVol: toNum(form.tallyFinalVol), gesekVol: toNum(form.gesekVol), gesekDate: form.gesekDate || null, tallyVol: toNum(form.tallyVol), finalVol: toNum(form.finalVol), notes: form.notes, rendemen: rendemen ? +rendemen : null });
+  const handleSave = () => onSave({ ...record, date: record.date, tallyLogVol: toNum(form.tallyLogVol), tallyFinalVol: toNum(form.tallyFinalVol), gesekVol: toNum(form.gesekVol), gesekDate: form.gesekDate || null, tallyVol: toNum(form.tallyVol), finalVol: toNum(form.finalVol), notes: form.notes, rendemen: rendemen ? +rendemen : null, hargaPerM3: toNum(form.hargaPerM3) });
   const title = record.type === "LOG" ? t.rawmat.modalTitle.updateLog : t.rawmat.modalTitle.updateRST;
   return (
     <Modal title={`${title} — ${record.supplier}`} onClose={onClose}>
@@ -356,6 +395,15 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
           </div>
           <DiffPill val={toNum(form.gesekVol)} base={effFinalLOG} label={t.rawmat.fields.diffVsFinal} />
           {rendemen != null && <InfoBox label={`🌿 ${t.rawmat.fields.rendemen}`} value={`${rendemen}%`} sub={t.rawmat.fields.rendemenHint} color={+rendemen >= 60 ? C.green : +rendemen >= 50 ? C.amber : C.red} bg={+rendemen >= 60 ? C.greenLight : +rendemen >= 50 ? C.amberLight : C.redLight} />}
+          {effFinalLOG != null && (
+            <div style={{ background: C.amberLight, border: `1px solid ${C.amber}30`, borderRadius: 10, padding: "14px 16px", marginTop: 4 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.amber, textTransform: "uppercase", marginBottom: 8 }}>💰 Harga Beli LOG</div>
+              <Field label="Harga per m³ (Rp) — basis Tally Final">
+                <input type="number" style={S.input} value={form.hargaPerM3} onChange={e => upd("hargaPerM3", e.target.value)} placeholder="Contoh: 850000" />
+              </Field>
+              {form.hargaPerM3 && effFinalLOG && <div style={{ display: "flex", justifyContent: "space-between", background: "#fff", borderRadius: 8, padding: "8px 12px" }}><span style={{ fontSize: 12, color: C.textSub }}>Total Nilai</span><span style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3 * effFinalLOG)}</span></div>}
+            </div>
+          )}
         </>
       ) : (
         <>
@@ -363,6 +411,15 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
           <DiffPill val={toNum(form.tallyVol)} base={record.sjVol} label={t.rawmat.fields.diffVsSJ} />
           <Field label={`${t.rawmat.fields.finalRST} (m³)`} hint={t.rawmat.fields.finalRSTHint}><input type="number" step="0.0001" style={S.input} value={form.finalVol} placeholder={form.tallyVol || ""} onChange={e => upd("finalVol", e.target.value)} /></Field>
           {effFinalRST != null && <InfoBox label={`✅ ${t.rawmat.fields.effectiveFinal}`} value={`${f2(effFinalRST, 4)} m³`} sub={`${t.rawmat.fields.diffVsSJ}: ${(effFinalRST - record.sjVol >= 0 ? "+" : "")}${f2(effFinalRST - record.sjVol, 4)} m³`} color={C.green} bg={C.greenLight} />}
+          {effFinalRST != null && (
+            <div style={{ background: C.blueLight, border: `1px solid ${C.blue}30`, borderRadius: 10, padding: "14px 16px", marginTop: 4 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: "uppercase", marginBottom: 8 }}>💰 Harga Beli RST</div>
+              <Field label="Harga per m³ (Rp) — basis Final">
+                <input type="number" style={S.input} value={form.hargaPerM3} onChange={e => upd("hargaPerM3", e.target.value)} placeholder="Contoh: 950000" />
+              </Field>
+              {form.hargaPerM3 && effFinalRST && <div style={{ display: "flex", justifyContent: "space-between", background: "#fff", borderRadius: 8, padding: "8px 12px" }}><span style={{ fontSize: 12, color: C.textSub }}>Total Nilai</span><span style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3 * effFinalRST)}</span></div>}
+            </div>
+          )}
         </>
       )}
       <div style={{ height: 1, background: C.border, margin: "16px 0" }} />
@@ -506,6 +563,8 @@ function RawmatModule({ t, lang }) {
   const [selectedSupplier, setSelectedSupplier] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState(currentMonth());
   const [showExport, setShowExport] = useState(false);
+  const [priceUnlocked, setPriceUnlocked] = useState(false);
+  const [showPIN, setShowPIN] = useState(false);
 
   const fetchRecords = useCallback(async () => {
     setLoading(true); setError(null);
@@ -521,62 +580,68 @@ function RawmatModule({ t, lang }) {
   const onDelete = async (id) => { if (!window.confirm("Hapus data ini?")) return; const { error } = await supabase.from("deliveries").delete().eq("id", id); if (error) { alert("Error: " + error.message); return; } await fetchRecords(); };
 
   const monthRecords = selectedMonth === "all" ? records : records.filter(r => r.date && r.date.startsWith(selectedMonth));
-
-  // First 4 boxes — always all suppliers
   const allLogs = monthRecords.filter(r => r.type === "LOG");
   const allRsts = monthRecords.filter(r => r.type === "RST");
-  const totalSJLog = allLogs.reduce((a, r) => a + (r.sjVol || 0), 0);
-  const totalSJRST = allRsts.reduce((a, r) => a + (r.sjVol || 0), 0);
   const totalFinalLog = allLogs.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
   const totalFinalRST = allRsts.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
   const totalGesek = allLogs.reduce((a, r) => a + (r.gesekVol || 0), 0);
-  const pendingTally = monthRecords.filter(r => getRawmatStatus(r) === "sj").length;
-  const pendingFinal = monthRecords.filter(r => getRawmatStatus(r) === "tally").length;
-
-  // Supplier-specific boxes when supplier selected
+  const rendemenLogs = allLogs.filter(r => r.rendemen != null);
+  const avgRendemenAll = rendemenLogs.length > 0 ? (rendemenLogs.reduce((a, r) => a + r.rendemen, 0) / rendemenLogs.length).toFixed(2) : null;
   const supLogs = selectedSupplier === "all" ? [] : monthRecords.filter(r => r.type === "LOG" && r.supplier === selectedSupplier);
   const supRsts = selectedSupplier === "all" ? [] : monthRecords.filter(r => r.type === "RST" && r.supplier === selectedSupplier);
   const supLogFinal = supLogs.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
   const supGesek = supLogs.reduce((a, r) => a + (r.gesekVol || 0), 0);
   const supRendemenLogs = supLogs.filter(r => r.rendemen != null);
   const supAvgRendemen = supRendemenLogs.length > 0 ? (supRendemenLogs.reduce((a, r) => a + r.rendemen, 0) / supRendemenLogs.length).toFixed(2) : null;
-  const supRstSJ = supRsts.reduce((a, r) => a + (r.sjVol || 0), 0);
   const supRstFinal = supRsts.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
-
+  const priceScope = selectedSupplier === "all" ? monthRecords : monthRecords.filter(r => r.supplier === selectedSupplier);
+  const priceLogs = priceScope.filter(r => r.type === "LOG" && r.hargaPerM3 != null);
+  const priceRsts = priceScope.filter(r => r.type === "RST" && r.hargaPerM3 != null);
+  const totalNilaiLOG = priceLogs.reduce((a, r) => a + (r.hargaPerM3 * (getEffectiveFinal(r) || 0)), 0);
+  const totalM3LOG = priceLogs.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
+  const avgCostLOG = totalM3LOG > 0 ? totalNilaiLOG / totalM3LOG : null;
+  const totalNilaiRST = priceRsts.reduce((a, r) => a + (r.hargaPerM3 * (getEffectiveFinal(r) || 0)), 0);
+  const totalM3RST = priceRsts.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
+  const avgCostRST = totalM3RST > 0 ? totalNilaiRST / totalM3RST : null;
   const suppliers = [...new Set(monthRecords.map(r => r.supplier).filter(Boolean))].sort();
   const filtered = [...monthRecords].filter(r => filter === "all" || r.type === filter).filter(r => selectedSupplier === "all" || r.supplier === selectedSupplier).sort((a, b) => { const an = parseInt(a.nomorKiriman), bn = parseInt(b.nomorKiriman); if (isNaN(an) && isNaN(bn)) return 0; if (isNaN(an)) return 1; if (isNaN(bn)) return -1; return an - bn; });
   const statusBadgeColor = (r) => { const s = getRawmatStatus(r); return s === "gesek" || s === "final" ? "green" : s === "tally" ? "blue" : "amber"; };
+  const requestUnlock = () => { if (!priceUnlocked) setShowPIN(true); };
 
   return (
     <div>
       <ErrorBar error={error} onRetry={fetchRecords} />
       <MonthBar selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} onExport={() => setShowExport(true)} t={t} lang={lang} resetFn={() => setSelectedSupplier("all")} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 24 }}>
-        {[
-          { label: t.rawmat.summary.logSJ, val: f2(totalSJLog, 4), unit: "m³", sub: `${allLogs.length} ${t.rawmat.summary.kiriman}`, accent: C.amber },
-          { label: t.rawmat.summary.logFinal, val: f2(totalFinalLog, 4), unit: "m³", sub: `${t.rawmat.summary.gesek}: ${f2(totalGesek, 4)} m³`, accent: C.green },
-          { label: t.rawmat.summary.rstSJ, val: f2(totalSJRST, 4), unit: "m³", sub: `${allRsts.length} ${t.rawmat.summary.kiriman}`, accent: C.blue },
-          { label: t.rawmat.summary.rstFinal, val: f2(totalFinalRST, 4), unit: "m³", accent: C.green },
-          ...(selectedSupplier === "all" ? [
-            { label: `⏳ ${t.rawmat.summary.pendingTally}`, val: pendingTally, unit: t.rawmat.summary.kiriman, accent: C.amber },
-            { label: `⏳ ${t.rawmat.summary.pendingFinal}`, val: pendingFinal, unit: t.rawmat.summary.kiriman, accent: C.red },
-          ] : [
-            ...(supRsts.length > 0 ? [
-              { label: `${selectedSupplier} · RST SJ`, val: f2(supRstSJ, 4), unit: "m³", accent: C.blue },
-              { label: `${selectedSupplier} · RST Final`, val: f2(supRstFinal, 4), unit: "m³", accent: C.green },
-            ] : []),
-            ...(supLogs.length > 0 ? [
-              { label: `${selectedSupplier} · LOG Final`, val: f2(supLogFinal, 4), unit: "m³", accent: C.amber },
-              { label: `${selectedSupplier} · Gesek`, val: f2(supGesek, 4), unit: "m³", sub: supAvgRendemen ? `Rendemen: ${supAvgRendemen}%` : null, accent: C.green },
-            ] : []),
-          ]),
-        ].map((c, i) => (
-          <div key={i} style={S.statCard(c.accent)}>
-            <div style={S.label}>{c.label}</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: C.primary }}>{c.val} <span style={{ fontSize: 12, fontWeight: 400, color: C.textSub }}>{c.unit}</span></div>
-            {c.sub && <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{c.sub}</div>}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
+        <div style={S.statCard(C.amber)}>
+          <div style={S.label}>{selectedSupplier === "all" ? t.rawmat.summary.logFinal : `${selectedSupplier} · LOG Final`}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.primary }}>{f2(selectedSupplier === "all" ? totalFinalLog : supLogFinal, 4)} <span style={{ fontSize: 12, fontWeight: 400, color: C.textSub }}>m³</span></div>
+        </div>
+        <div style={S.statCard(C.green)}>
+          <div style={S.label}>{t.rawmat.summary.gesek}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.primary }}>{f2(selectedSupplier === "all" ? totalGesek : supGesek, 4)} <span style={{ fontSize: 12, fontWeight: 400, color: C.textSub }}>m³</span></div>
+          {(selectedSupplier === "all" ? avgRendemenAll : supAvgRendemen) && <div style={{ fontSize: 11, color: C.green, marginTop: 2, fontWeight: 700 }}>Avg Rendemen: {selectedSupplier === "all" ? avgRendemenAll : supAvgRendemen}%</div>}
+        </div>
+        <div style={S.statCard(C.blue)}>
+          <div style={S.label}>{selectedSupplier === "all" ? t.rawmat.summary.rstFinal : `${selectedSupplier} · RST Final`}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.primary }}>{f2(selectedSupplier === "all" ? totalFinalRST : supRstFinal, 4)} <span style={{ fontSize: 12, fontWeight: 400, color: C.textSub }}>m³</span></div>
+        </div>
+        <div style={S.statCard(C.amber)}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+            <div style={S.label}>💰 LOG · Harga</div>
+            <span onClick={requestUnlock} style={{ cursor: "pointer", fontSize: 14 }}>{priceUnlocked ? "🔓" : "🔒"}</span>
           </div>
-        ))}
+          <div style={{ fontSize: 16, fontWeight: 800, color: C.primary }}><BlurPrice value={fRp(totalNilaiLOG)} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
+          <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>Avg: <BlurPrice value={avgCostLOG ? fRp(avgCostLOG) + "/m³" : "—"} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
+        </div>
+        <div style={S.statCard(C.blue)}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+            <div style={S.label}>💰 RST · Harga</div>
+            <span onClick={requestUnlock} style={{ cursor: "pointer", fontSize: 14 }}>{priceUnlocked ? "🔓" : "🔒"}</span>
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: C.primary }}><BlurPrice value={fRp(totalNilaiRST)} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
+          <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>Avg: <BlurPrice value={avgCostRST ? fRp(avgCostRST) + "/m³" : "—"} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
+        </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
@@ -594,7 +659,7 @@ function RawmatModule({ t, lang }) {
       ) : (
         <div style={{ background: C.card, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
-            <thead><tr style={{ background: C.bg }}>{[t.common.date, t.rawmat.table.nomorKiriman, t.rawmat.table.supplier, t.rawmat.table.type, t.rawmat.table.sj, t.rawmat.table.tally, t.rawmat.table.final, t.rawmat.table.gesek, t.rawmat.table.rendemen, t.rawmat.table.status, ""].map((h, i) => <th key={i} style={S.th}>{h}</th>)}</tr></thead>
+            <thead><tr style={{ background: C.bg }}>{[t.common.date, t.rawmat.table.nomorKiriman, t.rawmat.table.supplier, t.rawmat.table.type, t.rawmat.table.sj, t.rawmat.table.tally, t.rawmat.table.final, t.rawmat.table.gesek, t.rawmat.table.rendemen, "💰 Harga/m³", t.rawmat.table.status, ""].map((h, i) => <th key={i} style={S.th}>{h}</th>)}</tr></thead>
             <tbody>
               {filtered.map(r => {
                 const effFinal = getEffectiveFinal(r), tally = getTally(r), status = getRawmatStatus(r);
@@ -609,6 +674,7 @@ function RawmatModule({ t, lang }) {
                     <td style={{ ...S.td, fontWeight: 700 }}>{effFinal != null ? f2(effFinal, 4) : <span style={{ color: C.textLight }}>—</span>}</td>
                     <td style={S.td}>{r.type === "LOG" ? (r.gesekVol != null ? <div><div>{f2(r.gesekVol, 4)}</div>{r.gesekDate && <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{r.gesekDate}</div>}</div> : <span style={{ color: C.textLight }}>—</span>) : <span style={{ color: C.textLight }}>N/A</span>}</td>
                     <td style={S.td}>{r.type === "LOG" && r.rendemen != null ? <span style={{ fontWeight: 700, color: r.rendemen >= 60 ? C.green : r.rendemen >= 50 ? C.amber : C.red }}>{Number(r.rendemen).toFixed(2)}%</span> : <span style={{ color: C.textLight }}>—</span>}</td>
+                    <td style={S.td}><BlurPrice value={r.hargaPerM3 ? fRp(r.hargaPerM3) : null} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></td>
                     <td style={S.td}><span style={S.badge(statusBadgeColor(r))}>{t.rawmat.status[status]}</span></td>
                     <td style={S.td}><div style={{ display: "flex", gap: 6 }}><button style={S.btnSm(C.primary)} onClick={() => setEditing(r)}>{t.common.update}</button><button style={S.btnSm(C.red)} onClick={() => onDelete(r.id)}>✕</button></div></td>
                   </tr>
@@ -621,6 +687,7 @@ function RawmatModule({ t, lang }) {
       {showAdd && <AddRawmatModal t={t} filterType={filter} onClose={() => setShowAdd(false)} onSave={onAdd} saving={saving} />}
       {editing && <UpdateRawmatModal record={editing} t={t} onClose={() => setEditing(null)} onSave={onUpdate} saving={saving} />}
       {showExport && <RawmatExportModal records={filtered} month={selectedMonth} t={t} onClose={() => setShowExport(false)} />}
+      {showPIN && <PINModal onClose={() => setShowPIN(false)} onSuccess={() => { setPriceUnlocked(true); setTimeout(() => setPriceUnlocked(false), 10 * 60 * 1000); }} />}
     </div>
   );
 }
