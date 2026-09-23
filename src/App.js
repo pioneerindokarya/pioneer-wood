@@ -370,7 +370,14 @@ function AddRawmatModal({ onClose, onSave, t, filterType, saving }) {
   );
 }
 function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
-  const [form, setForm] = useState({ tallyLogVol: record.tallyLogVol ?? "", tallyFinalVol: record.tallyFinalVol ?? "", gesekVol: record.gesekVol ?? "", gesekDate: record.gesekDate ?? "", tallyVol: record.tallyVol ?? "", finalVol: record.finalVol ?? "", notes: record.notes ?? "", hargaPerM3: record.hargaPerM3 ?? "" });
+  const [form, setForm] = useState({
+    tallyLogVol: record.tallyLogVol ?? "", tallyFinalVol: record.tallyFinalVol ?? "",
+    gesekVol: record.gesekVol ?? "", gesekDate: record.gesekDate ?? "",
+    tallyVol: record.tallyVol ?? "", finalVol: record.finalVol ?? "",
+    notes: record.notes ?? "", hargaPerM3: record.hargaPerM3 ?? "",
+    _totalBayarLOG: record.hargaPerM3 && record.type === "LOG" ? "" : "",
+    _totalBayarRST: record.hargaPerM3 && record.type === "RST" ? "" : "",
+  });
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const status = getRawmatStatus(record);
   const effFinalLOG = toNum(form.tallyFinalVol) ?? toNum(form.tallyLogVol) ?? null;
@@ -397,11 +404,16 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
           {rendemen != null && <InfoBox label={`🌿 ${t.rawmat.fields.rendemen}`} value={`${rendemen}%`} sub={t.rawmat.fields.rendemenHint} color={+rendemen >= 60 ? C.green : +rendemen >= 50 ? C.amber : C.red} bg={+rendemen >= 60 ? C.greenLight : +rendemen >= 50 ? C.amberLight : C.redLight} />}
           {effFinalLOG != null && (
             <div style={{ background: C.amberLight, border: `1px solid ${C.amber}30`, borderRadius: 10, padding: "14px 16px", marginTop: 4 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.amber, textTransform: "uppercase", marginBottom: 8 }}>💰 Harga Beli LOG</div>
-              <Field label="Harga per m³ (Rp) — basis Tally Final">
-                <input type="number" style={S.input} value={form.hargaPerM3} onChange={e => upd("hargaPerM3", e.target.value)} placeholder="Contoh: 850000" />
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.amber, textTransform: "uppercase", marginBottom: 8 }}>💰 Pembayaran LOG</div>
+              <Field label="Total Bayar (Rp)">
+                <input type="number" style={S.input} value={form.hargaPerM3 ? Math.round(form.hargaPerM3 * effFinalLOG) : form._totalBayarLOG || ""} onChange={e => { const total = +e.target.value; upd("hargaPerM3", total > 0 ? total / effFinalLOG : ""); upd("_totalBayarLOG", e.target.value); }} placeholder="Contoh: 73100000" />
               </Field>
-              {form.hargaPerM3 && effFinalLOG && <div style={{ display: "flex", justifyContent: "space-between", background: "#fff", borderRadius: 8, padding: "8px 12px" }}><span style={{ fontSize: 12, color: C.textSub }}>Total Nilai</span><span style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3 * effFinalLOG)}</span></div>}
+              {form.hargaPerM3 && (
+                <div style={{ display: "flex", justifyContent: "space-between", background: "#fff", borderRadius: 8, padding: "8px 12px", gap: 16 }}>
+                  <div><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>Harga per m³</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3)}</div></div>
+                  <div style={{ textAlign: "right" }}><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>Total ({f2(effFinalLOG, 4)} m³)</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3 * effFinalLOG)}</div></div>
+                </div>
+              )}
             </div>
           )}
         </>
@@ -413,11 +425,16 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
           {effFinalRST != null && <InfoBox label={`✅ ${t.rawmat.fields.effectiveFinal}`} value={`${f2(effFinalRST, 4)} m³`} sub={`${t.rawmat.fields.diffVsSJ}: ${(effFinalRST - record.sjVol >= 0 ? "+" : "")}${f2(effFinalRST - record.sjVol, 4)} m³`} color={C.green} bg={C.greenLight} />}
           {effFinalRST != null && (
             <div style={{ background: C.blueLight, border: `1px solid ${C.blue}30`, borderRadius: 10, padding: "14px 16px", marginTop: 4 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: "uppercase", marginBottom: 8 }}>💰 Harga Beli RST</div>
-              <Field label="Harga per m³ (Rp) — basis Final">
-                <input type="number" style={S.input} value={form.hargaPerM3} onChange={e => upd("hargaPerM3", e.target.value)} placeholder="Contoh: 950000" />
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: "uppercase", marginBottom: 8 }}>💰 Pembayaran RST</div>
+              <Field label="Total Bayar (Rp)">
+                <input type="number" style={S.input} value={form.hargaPerM3 ? Math.round(form.hargaPerM3 * effFinalRST) : form._totalBayarRST || ""} onChange={e => { const total = +e.target.value; upd("hargaPerM3", total > 0 ? total / effFinalRST : ""); upd("_totalBayarRST", e.target.value); }} placeholder="Contoh: 95000000" />
               </Field>
-              {form.hargaPerM3 && effFinalRST && <div style={{ display: "flex", justifyContent: "space-between", background: "#fff", borderRadius: 8, padding: "8px 12px" }}><span style={{ fontSize: 12, color: C.textSub }}>Total Nilai</span><span style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3 * effFinalRST)}</span></div>}
+              {form.hargaPerM3 && (
+                <div style={{ display: "flex", justifyContent: "space-between", background: "#fff", borderRadius: 8, padding: "8px 12px", gap: 16 }}>
+                  <div><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>Harga per m³</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3)}</div></div>
+                  <div style={{ textAlign: "right" }}><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>Total ({f2(effFinalRST, 4)} m³)</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3 * effFinalRST)}</div></div>
+                </div>
+              )}
             </div>
           )}
         </>
