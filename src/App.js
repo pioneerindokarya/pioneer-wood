@@ -622,45 +622,64 @@ function RawmatModule({ t, lang }) {
   const totalNilaiRST = priceRsts.reduce((a, r) => a + (r.hargaPerM3 * (getEffectiveFinal(r) || 0)), 0);
   const totalM3RST = priceRsts.reduce((a, r) => a + (getEffectiveFinal(r) || 0), 0);
   const avgCostRST = totalM3RST > 0 ? totalNilaiRST / totalM3RST : null;
+  const totalNilaiAll = totalNilaiLOG + totalNilaiRST;
+  const totalGesekPriced = priceLogs.reduce((a, r) => a + (r.gesekVol || 0), 0);
+  const avgCostGesek = totalGesekPriced > 0 ? totalNilaiLOG / totalGesekPriced : null;
+  const totalSJRSTScoped = (selectedSupplier === "all" ? allRsts : supRsts).reduce((a, r) => a + (r.sjVol || 0), 0);
   const suppliers = [...new Set(monthRecords.map(r => r.supplier).filter(Boolean))].sort();
   const filtered = [...monthRecords].filter(r => filter === "all" || r.type === filter).filter(r => selectedSupplier === "all" || r.supplier === selectedSupplier).sort((a, b) => { const an = parseInt(a.nomorKiriman), bn = parseInt(b.nomorKiriman); if (isNaN(an) && isNaN(bn)) return 0; if (isNaN(an)) return 1; if (isNaN(bn)) return -1; return an - bn; });
   const statusBadgeColor = (r) => { const s = getRawmatStatus(r); return s === "gesek" || s === "final" ? "green" : s === "tally" ? "blue" : "amber"; };
   const requestUnlock = () => { if (!priceUnlocked) setShowPIN(true); };
 
+  // Dynamic 4-box dashboard
+  const supLabel = selectedSupplier === "all" ? "" : `${selectedSupplier} · `;
+  const logFinalVal = f2(selectedSupplier === "all" ? totalFinalLog : supLogFinal, 4);
+  const gesekVal = f2(selectedSupplier === "all" ? totalGesek : supGesek, 4);
+  const gesekSub = (selectedSupplier === "all" ? avgRendemenAll : supAvgRendemen) ? `Avg Rendemen: ${selectedSupplier === "all" ? avgRendemenAll : supAvgRendemen}%` : null;
+  const rstFinalVal = f2(selectedSupplier === "all" ? totalFinalRST : supRstFinal, 4);
+
+  const dashBoxes = filter === "RST" ? [
+    { label: `${supLabel}SJ RST`, val: f2(totalSJRSTScoped, 4), unit: "m³", accent: C.blue },
+    { label: `${supLabel}${t.rawmat.summary.rstFinal}`, val: rstFinalVal, unit: "m³", accent: C.blue },
+    { label: t.rawmat.price.dashRST, isPrice: true, val: fRp(totalNilaiRST), accent: C.blue },
+    { label: lang === "id" ? "Avg Cost/m³ Tally" : "均价/m³盘点", isPrice: true, val: avgCostRST ? fRp(avgCostRST) + "/m³" : "—", accent: C.blue },
+  ] : filter === "LOG" ? [
+    { label: `${supLabel}${t.rawmat.summary.logFinal}`, val: logFinalVal, unit: "m³", accent: C.amber },
+    { label: t.rawmat.summary.gesek, val: gesekVal, unit: "m³", sub: gesekSub, accent: C.green },
+    { label: t.rawmat.price.dashLog, isPrice: true, val: fRp(totalNilaiLOG), accent: C.amber },
+    { label: lang === "id" ? "Avg Cost/m³ Gesek" : "均价/m³锯切", isPrice: true, val: avgCostGesek ? fRp(avgCostGesek) + "/m³" : "—", accent: C.green },
+  ] : [
+    { label: `${supLabel}${t.rawmat.summary.logFinal}`, val: logFinalVal, unit: "m³", sub: gesekSub ? `Gesek: ${gesekVal} m³  ${gesekSub}` : `Gesek: ${gesekVal} m³`, accent: C.amber },
+    { label: `${supLabel}${t.rawmat.summary.rstFinal}`, val: rstFinalVal, unit: "m³", accent: C.blue },
+    { label: lang === "id" ? "Total Nilai" : "总价值", isPrice: true, val: fRp(totalNilaiAll), sub: `LOG: ${fRp(totalNilaiLOG)}  RST: ${fRp(totalNilaiRST)}`, accent: C.primary },
+    { label: lang === "id" ? "Avg Cost LOG/m³" : "原木均价/m³", isPrice: true, val: avgCostLOG ? fRp(avgCostLOG) + "/m³" : "—", sub: avgCostRST ? `RST: ${fRp(avgCostRST)}/m³` : null, accent: C.primary },
+  ];
+
   return (
     <div>
       <ErrorBar error={error} onRetry={fetchRecords} />
       <MonthBar selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} onExport={() => setShowExport(true)} t={t} lang={lang} resetFn={() => setSelectedSupplier("all")} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
-        <div style={S.statCard(C.amber)}>
-          <div style={S.label}>{selectedSupplier === "all" ? t.rawmat.summary.logFinal : `${selectedSupplier} · LOG Final`}</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: C.primary }}>{f2(selectedSupplier === "all" ? totalFinalLog : supLogFinal, 4)} <span style={{ fontSize: 12, fontWeight: 400, color: C.textSub }}>m³</span></div>
-        </div>
-        <div style={S.statCard(C.green)}>
-          <div style={S.label}>{t.rawmat.summary.gesek}</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: C.primary }}>{f2(selectedSupplier === "all" ? totalGesek : supGesek, 4)} <span style={{ fontSize: 12, fontWeight: 400, color: C.textSub }}>m³</span></div>
-          {(selectedSupplier === "all" ? avgRendemenAll : supAvgRendemen) && <div style={{ fontSize: 11, color: C.green, marginTop: 2, fontWeight: 700 }}>Avg Rendemen: {selectedSupplier === "all" ? avgRendemenAll : supAvgRendemen}%</div>}
-        </div>
-        <div style={S.statCard(C.blue)}>
-          <div style={S.label}>{selectedSupplier === "all" ? t.rawmat.summary.rstFinal : `${selectedSupplier} · RST Final`}</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: C.primary }}>{f2(selectedSupplier === "all" ? totalFinalRST : supRstFinal, 4)} <span style={{ fontSize: 12, fontWeight: 400, color: C.textSub }}>m³</span></div>
-        </div>
-        <div style={S.statCard(C.amber)}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-            <div style={S.label}>{t.rawmat.price.dashLog}</div>
-            <span onClick={requestUnlock} style={{ cursor: "pointer", fontSize: 14 }}>{priceUnlocked ? "🔓" : "🔒"}</span>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+        {dashBoxes.map((c, i) => (
+          <div key={i} style={S.statCard(c.accent)}>
+            {c.isPrice ? (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <div style={S.label}>{c.label}</div>
+                  <span onClick={requestUnlock} style={{ cursor: "pointer", fontSize: 13 }}>{priceUnlocked ? "🔓" : "🔒"}</span>
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: C.primary }}><BlurPrice value={c.val} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
+                {c.sub && <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}><BlurPrice value={c.sub} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>}
+              </>
+            ) : (
+              <>
+                <div style={S.label}>{c.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: C.primary }}>{c.val} <span style={{ fontSize: 12, fontWeight: 400, color: C.textSub }}>{c.unit}</span></div>
+                {c.sub && <div style={{ fontSize: 11, color: C.green, marginTop: 2, fontWeight: 600 }}>{c.sub}</div>}
+              </>
+            )}
           </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: C.primary }}><BlurPrice value={fRp(totalNilaiLOG)} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
-          <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>{t.rawmat.price.avg} <BlurPrice value={avgCostLOG ? fRp(avgCostLOG) + "/m³" : "—"} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
-        </div>
-        <div style={S.statCard(C.blue)}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-            <div style={S.label}>{t.rawmat.price.dashRST}</div>
-            <span onClick={requestUnlock} style={{ cursor: "pointer", fontSize: 14 }}>{priceUnlocked ? "🔓" : "🔒"}</span>
-          </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: C.primary }}><BlurPrice value={fRp(totalNilaiRST)} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
-          <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>{t.rawmat.price.avg} <BlurPrice value={avgCostRST ? fRp(avgCostRST) + "/m³" : "—"} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
-        </div>
+        ))}
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
