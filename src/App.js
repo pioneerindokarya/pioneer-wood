@@ -18,7 +18,9 @@ const T = {
   id: {
     nav: { rawmat: "Bahan Baku", production: "Produksi", stock: "Stok" },
     langToggle: "切换中文",
-    common: { save: "Simpan", cancel: "Batal", date: "Tanggal", notes: "Catatan", loading: "Memuat...", noData: "Belum ada data", allMonths: "Semua Bulan", thisMonth: "Bulan Ini", exportBtn: "Export Laporan", all: "Semua", update: "Update" },
+    common: { save: "Simpan", cancel: "Batal", date: "Tanggal", notes: "Catatan", loading: "Memuat...", noData: "Belum ada data", allMonths: "Semua Bulan", thisMonth: "Bulan Ini", exportBtn: "Export Laporan", all: "Semua", update: "Update",
+      pin: { title: "🔒 Masukkan PIN", label: "PIN 4 Digit", wrong: "PIN salah, coba lagi", unlock: "Buka 🔓" },
+    },
     rawmat: {
       appName: "Penerimaan Bahan Baku", addBtn: "+ Tambah Kiriman",
       common: { nomorKiriman: "No. Kiriman", supplier: "Supplier", type: "Jenis" },
@@ -37,6 +39,7 @@ const T = {
       modalTitle: { add: "Tambah Kiriman Baru", updateLog: "Update Data LOG", updateRST: "Update Data RST" },
       export: { title: "Laporan Penerimaan Bahan Baku", copy: "Salin", copied: "Tersalin!", print: "Print", detail: "Detail Kiriman", avgRendemen: "Rata-rata Rendemen" },
       filter: { allSuppliers: "Semua Supplier" },
+      price: { logTitle: "💰 Pembayaran LOG", rstTitle: "💰 Pembayaran RST", totalBayar: "Total Bayar (Rp)", hargaPerM3: "Harga per m³", total: "Total", dashLog: "💰 LOG · Harga", dashRST: "💰 RST · Harga", avg: "Avg:", tally: "Tally (m³)", colHarga: "💰 Harga/m³", colTotal: "💰 Total Nilai" },
     },
     production: {
       appName: "Laporan Produksi", addBtn: "+ Tambah Produksi",
@@ -65,7 +68,9 @@ const T = {
   cn: {
     nav: { rawmat: "原材料", production: "生产", stock: "库存" },
     langToggle: "Bahasa ID",
-    common: { save: "保存", cancel: "取消", date: "日期", notes: "备注", loading: "加载中...", noData: "暂无数据", allMonths: "全部月份", thisMonth: "本月", exportBtn: "导出报告", all: "全部", update: "更新" },
+    common: { save: "保存", cancel: "取消", date: "日期", notes: "备注", loading: "加载中...", noData: "暂无数据", allMonths: "全部月份", thisMonth: "本月", exportBtn: "导出报告", all: "全部", update: "更新",
+      pin: { title: "🔒 输入PIN码", label: "4位PIN码", wrong: "PIN码错误，请重试", unlock: "解锁 🔓" },
+    },
     rawmat: {
       appName: "原材料入库记录", addBtn: "+ 添加入库",
       common: { nomorKiriman: "送货编号", supplier: "供应商", type: "类型" },
@@ -84,6 +89,7 @@ const T = {
       modalTitle: { add: "添加新入库", updateLog: "更新原木数据", updateRST: "更新RST数据" },
       export: { title: "原材料入库报告", copy: "复制", copied: "已复制!", print: "打印", detail: "入库明细", avgRendemen: "平均出材率" },
       filter: { allSuppliers: "全部供应商" },
+      price: { logTitle: "💰 原木付款", rstTitle: "💰 RST付款", totalBayar: "总付款金额 (Rp)", hargaPerM3: "单价/m³", total: "合计", dashLog: "💰 原木 · 价格", dashRST: "💰 RST · 价格", avg: "均价:", tally: "盘点 (m³)", colHarga: "💰 单价/m³", colTotal: "💰 总价值" },
     },
     production: {
       appName: "生产报告", addBtn: "+ 添加生产记录",
@@ -283,9 +289,9 @@ function ErrorBar({ error, onRetry }) {
 }
 
 // ─── PIN & PRICE COMPONENTS ────────────────────────────────────────────────
-const DEFAULT_PIN = "1234";
+const DEFAULT_PIN = "7878";
 
-function PINModal({ onClose, onSuccess }) {
+function PINModal({ onClose, onSuccess, t }) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
   const handleSubmit = () => {
@@ -294,15 +300,15 @@ function PINModal({ onClose, onSuccess }) {
     else { setError(true); setPin(""); }
   };
   return (
-    <Modal title="🔒 Masukkan PIN" onClose={onClose}>
+    <Modal title={t.common.pin.title} onClose={onClose}>
       <div style={{ marginBottom: 14 }}>
-        <label style={{ fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 8 }}>PIN 4 Digit</label>
+        <label style={{ fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 8 }}>{t.common.pin.label}</label>
         <input type="password" maxLength={4} style={{ ...S.input, fontSize: 24, letterSpacing: 12, textAlign: "center" }} value={pin} onChange={e => { setPin(e.target.value); setError(false); }} onKeyDown={e => e.key === "Enter" && handleSubmit()} autoFocus />
-        {error && <div style={{ color: C.red, fontSize: 12, fontWeight: 700, marginTop: 6, textAlign: "center" }}>PIN salah, coba lagi</div>}
+        {error && <div style={{ color: C.red, fontSize: 12, fontWeight: 700, marginTop: 6, textAlign: "center" }}>{t.common.pin.wrong}</div>}
       </div>
       <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-        <button style={S.btnOut} onClick={onClose}>{T.id.common.cancel}</button>
-        <button style={S.btn(C.primary)} onClick={handleSubmit}>Buka 🔓</button>
+        <button style={S.btnOut} onClick={onClose}>{t.common.cancel}</button>
+        <button style={S.btn(C.primary)} onClick={handleSubmit}>{t.common.pin.unlock}</button>
       </div>
     </Modal>
   );
@@ -391,7 +397,7 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
       <InfoBox label={`📄 ${t.rawmat.fields.sjVol}`} value={`${f2(record.sjVol, 4)} m³`} bg="#F9F7F4" />
       {record.type === "LOG" ? (
         <>
-          <Field label="Tally (m³)"><input type="number" step="0.0001" style={S.input} value={form.tallyLogVol} onChange={e => upd("tallyLogVol", e.target.value)} /></Field>
+          <Field label={t.rawmat.price.tally}><input type="number" step="0.0001" style={S.input} value={form.tallyLogVol} onChange={e => upd("tallyLogVol", e.target.value)} /></Field>
           <DiffPill val={toNum(form.tallyLogVol)} base={record.sjVol} label={t.rawmat.fields.diffVsSJ} />
           <div style={{ height: 1, background: C.border, margin: "16px 0" }} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
@@ -402,14 +408,14 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
           {rendemen != null && <InfoBox label={`🌿 ${t.rawmat.fields.rendemen}`} value={`${rendemen}%`} sub={t.rawmat.fields.rendemenHint} color={+rendemen >= 60 ? C.green : +rendemen >= 50 ? C.amber : C.red} bg={+rendemen >= 60 ? C.greenLight : +rendemen >= 50 ? C.amberLight : C.redLight} />}
           {effFinalLOG != null && (
             <div style={{ background: C.amberLight, border: `1px solid ${C.amber}30`, borderRadius: 10, padding: "14px 16px", marginTop: 4 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.amber, textTransform: "uppercase", marginBottom: 8 }}>💰 Pembayaran LOG</div>
-              <Field label="Total Bayar (Rp)">
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.amber, textTransform: "uppercase", marginBottom: 8 }}>{t.rawmat.price.logTitle}</div>
+              <Field label={t.rawmat.price.totalBayar}>
                 <input type="number" style={S.input} value={form.hargaPerM3 ? Math.round(form.hargaPerM3 * effFinalLOG) : form._totalBayarLOG || ""} onChange={e => { const total = +e.target.value; upd("hargaPerM3", total > 0 ? total / effFinalLOG : ""); upd("_totalBayarLOG", e.target.value); }} placeholder="Contoh: 73100000" />
               </Field>
               {form.hargaPerM3 && (
                 <div style={{ display: "flex", justifyContent: "space-between", background: "#fff", borderRadius: 8, padding: "8px 12px", gap: 16 }}>
-                  <div><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>Harga per m³</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3)}</div></div>
-                  <div style={{ textAlign: "right" }}><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>Total ({f2(effFinalLOG, 4)} m³)</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3 * effFinalLOG)}</div></div>
+                  <div><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>{t.rawmat.price.hargaPerM3}</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3)}</div></div>
+                  <div style={{ textAlign: "right" }}><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>{t.rawmat.price.total} ({f2(effFinalLOG, 4)} m³)</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3 * effFinalLOG)}</div></div>
                 </div>
               )}
             </div>
@@ -417,18 +423,18 @@ function UpdateRawmatModal({ record, onClose, onSave, t, saving }) {
         </>
       ) : (
         <>
-          <Field label="Tally (m³)"><input type="number" step="0.0001" style={S.input} value={form.tallyVol} onChange={e => upd("tallyVol", e.target.value)} /></Field>
+          <Field label={t.rawmat.price.tally}><input type="number" step="0.0001" style={S.input} value={form.tallyVol} onChange={e => upd("tallyVol", e.target.value)} /></Field>
           <DiffPill val={toNum(form.tallyVol)} base={record.sjVol} label={t.rawmat.fields.diffVsSJ} />
           {effFinalRST != null && (
             <div style={{ background: C.blueLight, border: `1px solid ${C.blue}30`, borderRadius: 10, padding: "14px 16px", marginTop: 4 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: "uppercase", marginBottom: 8 }}>💰 Pembayaran RST</div>
-              <Field label="Total Bayar (Rp)">
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: "uppercase", marginBottom: 8 }}>{t.rawmat.price.rstTitle}</div>
+              <Field label={t.rawmat.price.totalBayar}>
                 <input type="number" style={S.input} value={form.hargaPerM3 ? Math.round(form.hargaPerM3 * effFinalRST) : form._totalBayarRST || ""} onChange={e => { const total = +e.target.value; upd("hargaPerM3", total > 0 ? total / effFinalRST : ""); upd("_totalBayarRST", e.target.value); }} placeholder="Contoh: 95000000" />
               </Field>
               {form.hargaPerM3 && (
                 <div style={{ display: "flex", justifyContent: "space-between", background: "#fff", borderRadius: 8, padding: "8px 12px", gap: 16 }}>
-                  <div><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>Harga per m³</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3)}</div></div>
-                  <div style={{ textAlign: "right" }}><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>Total ({f2(effFinalRST, 4)} m³)</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3 * effFinalRST)}</div></div>
+                  <div><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>{t.rawmat.price.hargaPerM3}</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3)}</div></div>
+                  <div style={{ textAlign: "right" }}><div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase" }}>{t.rawmat.price.total} ({f2(effFinalRST, 4)} m³)</div><div style={{ fontSize: 15, fontWeight: 800, color: C.primary }}>{fRp(+form.hargaPerM3 * effFinalRST)}</div></div>
                 </div>
               )}
             </div>
@@ -641,19 +647,19 @@ function RawmatModule({ t, lang }) {
         </div>
         <div style={S.statCard(C.amber)}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-            <div style={S.label}>💰 LOG · Harga</div>
+            <div style={S.label}>{t.rawmat.price.dashLog}</div>
             <span onClick={requestUnlock} style={{ cursor: "pointer", fontSize: 14 }}>{priceUnlocked ? "🔓" : "🔒"}</span>
           </div>
           <div style={{ fontSize: 16, fontWeight: 800, color: C.primary }}><BlurPrice value={fRp(totalNilaiLOG)} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
-          <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>Avg: <BlurPrice value={avgCostLOG ? fRp(avgCostLOG) + "/m³" : "—"} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
+          <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>{t.rawmat.price.avg} <BlurPrice value={avgCostLOG ? fRp(avgCostLOG) + "/m³" : "—"} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
         </div>
         <div style={S.statCard(C.blue)}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-            <div style={S.label}>💰 RST · Harga</div>
+            <div style={S.label}>{t.rawmat.price.dashRST}</div>
             <span onClick={requestUnlock} style={{ cursor: "pointer", fontSize: 14 }}>{priceUnlocked ? "🔓" : "🔒"}</span>
           </div>
           <div style={{ fontSize: 16, fontWeight: 800, color: C.primary }}><BlurPrice value={fRp(totalNilaiRST)} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
-          <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>Avg: <BlurPrice value={avgCostRST ? fRp(avgCostRST) + "/m³" : "—"} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
+          <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>{t.rawmat.price.avg} <BlurPrice value={avgCostRST ? fRp(avgCostRST) + "/m³" : "—"} unlocked={priceUnlocked} onRequestUnlock={requestUnlock} /></div>
         </div>
       </div>
 
@@ -672,7 +678,7 @@ function RawmatModule({ t, lang }) {
       ) : (
         <div style={{ background: C.card, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
-            <thead><tr style={{ background: C.bg }}>{[t.common.date, t.rawmat.table.nomorKiriman, t.rawmat.table.supplier, t.rawmat.table.type, t.rawmat.table.sj, "Tally (m³)", t.rawmat.table.gesek, t.rawmat.table.rendemen, "💰 Harga/m³", "💰 Total Nilai", t.rawmat.table.status, ""].map((h, i) => <th key={i} style={S.th}>{h}</th>)}</tr></thead>
+            <thead><tr style={{ background: C.bg }}>{[t.common.date, t.rawmat.table.nomorKiriman, t.rawmat.table.supplier, t.rawmat.table.type, t.rawmat.table.sj, t.rawmat.price.tally, t.rawmat.table.gesek, t.rawmat.table.rendemen, t.rawmat.price.colHarga, t.rawmat.price.colTotal, t.rawmat.table.status, ""].map((h, i) => <th key={i} style={S.th}>{h}</th>)}</tr></thead>
             <tbody>
               {filtered.map(r => {
                 const effFinal = getEffectiveFinal(r), tally = getTally(r), status = getRawmatStatus(r);
@@ -702,7 +708,7 @@ function RawmatModule({ t, lang }) {
       {showAdd && <AddRawmatModal t={t} filterType={filter} onClose={() => setShowAdd(false)} onSave={onAdd} saving={saving} />}
       {editing && <UpdateRawmatModal record={editing} t={t} onClose={() => setEditing(null)} onSave={onUpdate} saving={saving} />}
       {showExport && <RawmatExportModal records={filtered} month={selectedMonth} t={t} onClose={() => setShowExport(false)} />}
-      {showPIN && <PINModal onClose={() => setShowPIN(false)} onSuccess={() => { setPriceUnlocked(true); setTimeout(() => setPriceUnlocked(false), 10 * 60 * 1000); }} />}
+      {showPIN && <PINModal t={t} onClose={() => setShowPIN(false)} onSuccess={() => { setPriceUnlocked(true); setTimeout(() => setPriceUnlocked(false), 10 * 60 * 1000); }} />}
     </div>
   );
 }
