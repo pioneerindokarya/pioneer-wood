@@ -646,13 +646,13 @@ function RawmatModule({ t, lang }) {
   ] : filter === "LOG" ? [
     { label: `${supLabel}${t.rawmat.summary.logFinal}`, val: logFinalVal, unit: "m³", accent: C.amber },
     { label: t.rawmat.summary.gesek, val: gesekVal, unit: "m³", sub: gesekSub, accent: C.green },
-    { label: t.rawmat.price.dashLog, isPrice: true, val: fRp(totalNilaiLOG), accent: C.amber },
+    { label: t.rawmat.price.dashLog, isPrice: true, val: fRp(totalNilaiLOG), sub: avgCostLOG ? `Avg/m³ Tally: ${fRp(avgCostLOG)}` : null, accent: C.amber },
     { label: lang === "id" ? "Avg Cost/m³ Gesek" : "均价/m³锯切", isPrice: true, val: avgCostGesek ? fRp(avgCostGesek) + "/m³" : "—", accent: C.green },
   ] : [
     { label: `${supLabel}${t.rawmat.summary.logFinal}`, val: logFinalVal, unit: "m³", sub: gesekSub ? `Gesek: ${gesekVal} m³  ${gesekSub}` : `Gesek: ${gesekVal} m³`, accent: C.amber },
     { label: `${supLabel}${t.rawmat.summary.rstFinal}`, val: rstFinalVal, unit: "m³", accent: C.blue },
-    { label: lang === "id" ? "Total Nilai" : "总价值", isPrice: true, val: fRp(totalNilaiAll), sub: `LOG: ${fRp(totalNilaiLOG)}  RST: ${fRp(totalNilaiRST)}`, accent: C.primary },
-    { label: lang === "id" ? "Avg Cost LOG/m³" : "原木均价/m³", isPrice: true, val: avgCostLOG ? fRp(avgCostLOG) + "/m³" : "—", sub: avgCostRST ? `RST: ${fRp(avgCostRST)}/m³` : null, accent: C.primary },
+    { label: lang === "id" ? "Total Nilai" : "总价值", isPrice: true, val: fRp(totalNilaiAll), sub: avgCostLOG ? `LOG avg: ${fRp(avgCostLOG)}/m³` : null, accent: C.primary },
+    { label: lang === "id" ? "Avg Cost RST/m³" : "RST均价/m³", isPrice: true, val: avgCostRST ? fRp(avgCostRST) + "/m³" : "—", sub: avgCostLOG ? `LOG: ${fRp(avgCostLOG)}/m³` : null, accent: C.primary },
   ];
 
   return (
